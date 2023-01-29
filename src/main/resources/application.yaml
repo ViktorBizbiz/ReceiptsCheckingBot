@@ -1,0 +1,19 @@
+###
+# Spring settings
+###
+spring:
+  #Database settings
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:defaultDB
+    username: defaultUsername
+    password: defaultPassword
+  #Jpa settings
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: false
+
+#Telegram bot settings
+bot:
+  name: FiscalReceiptsCheckingBot
+  token: 6168758085:AAGCYSwaw2aRrfAO9CF904XK166sQNOL41c
