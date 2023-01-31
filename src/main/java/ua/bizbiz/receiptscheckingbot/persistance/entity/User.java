@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.sql.Timestamp;
+
 @Builder
 @Data
 @NoArgsConstructor
@@ -28,6 +30,9 @@ public class User {
 
     @Column(name = "phone_number")
     String phoneNumber;
+
+    @Column(name = "registered_at")
+    Timestamp registeredAt;
 
     @Column(name = "sold_packages")
     Integer soldPackages;
