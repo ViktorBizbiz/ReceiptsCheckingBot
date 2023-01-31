@@ -8,12 +8,19 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ua.bizbiz.receiptscheckingbot.config.BotConfig;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
+import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
+
+import java.sql.Timestamp;
 
 @Service
 @RequiredArgsConstructor
 public class TelegramBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
+
+    private final UserRepository userRepository;
 
     @Override
     public String getBotUsername() {
@@ -34,11 +41,34 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             switch (messageText) {
                 case "/start":
+                    registerUser(msg);
                     startCommandGreeting(chatId, msg.getChat().getFirstName());
                     break;
                 default:
                     sendMessage(chatId, "Sorry, command was not recognized");
             }
+        }
+    }
+
+    private void registerUser(Message msg) {
+
+        if (userRepository.findById(msg.getChatId()).isEmpty()) {
+            var chatId = msg.getChatId();
+            var chat = msg.getChat();
+
+            User user = User.builder()
+                    .chatId(chatId)
+                    .firstName(chat.getFirstName())
+                    .lastName(chat.getLastName())
+                    .userName(chat.getUserName())
+                    .phoneNumber(null)
+                    .registeredAt(new Timestamp(System.currentTimeMillis()))
+                    .soldPackages(0)
+                    .score(0)
+                    .role(Role.USER)
+                    .build();
+
+            userRepository.save(user);
         }
     }
 
