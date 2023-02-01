@@ -1,6 +1,7 @@
 package ua.bizbiz.receiptscheckingbot.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -169,6 +170,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(message);
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "0 0 16 * * *")
+    private void sendMotivationText() {
+        var users = userRepository.findAll();
+        for (User user : users) {
+            String motivation = "Hello, " + user.getFirstName() + "! Ничто так не согревает холодными ночами, как мысли о тебе))";
+            sendMessage(user.getChatId(), motivation);
         }
     }
 }
