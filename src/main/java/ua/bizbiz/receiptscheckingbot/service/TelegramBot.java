@@ -43,27 +43,74 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            Message msg = update.getMessage();
-            String messageText = msg.getText();
-            long chatId = msg.getChatId();
+        if (update.hasMessage()) {
+            if (update.getMessage().hasText()) {
+                Message msg = update.getMessage();
+                String messageText = msg.getText();
+                long chatId = msg.getChatId();
 
-            switch (messageText) {
-                case "/start":
+                if (messageText.equals("/start")) {
                     registerUser(msg);
-                    startCommandGreeting(chatId, msg.getChat().getFirstName());
-                    break;
-                case "/sharePhoneNumber":
+                    startCommandGreeting(chatId, msg.getChat().getFirstName(), getMainMenuKeyboard(msg));
+                } else if (messageText.equals("/sharePhoneNumber")) {
                     phoneNumberRequest(chatId);
-                    break;
-                default:
-                    sendMessage(chatId, "Sorry, command was not recognized");
+                } else {
+                    sendMessageWithReplyKeyboard(chatId, "Sorry, command was not recognized",
+                            getMainMenuKeyboard(msg));
+                }
+            }
+            if (update.getMessage().hasContact()) {
+                Message msg = update.getMessage();
+                saveUserPhoneNumber(msg.getContact());
+                deleteMessage(msg);
+                sendMessageWithReplyKeyboard(msg.getChatId(), "Your phone number has been recorded.",
+                        getMainMenuKeyboard(msg));
             }
         }
-        if (update.getMessage().hasContact()) {
-            saveUserPhoneNumber(update.getMessage().getContact());
-            deleteMessage(update.getMessage());
+    }
+
+    private SendMessage getMainMenuKeyboard(Message msg) {
+        long chatId = msg.getChatId();
+        Optional<User> user = userRepository.findById(chatId);
+        if (user.isPresent()) {
+            if (user.get().getRole() == Role.ADMIN) {
+                SendMessage message = new SendMessage();
+
+                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+                keyboardMarkup.setResizeKeyboard(true);
+
+                List<KeyboardRow> keyboardRows = new ArrayList<>();
+
+                KeyboardRow row = new KeyboardRow();
+                row.add("Add user");
+
+                keyboardRows.add(row);
+
+                keyboardMarkup.setKeyboard(keyboardRows);
+
+                message.setReplyMarkup(keyboardMarkup);
+
+                return message;
+            } else {
+                SendMessage message = new SendMessage();
+                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+                keyboardMarkup.setResizeKeyboard(true);
+
+                List<KeyboardRow> keyboardRows = new ArrayList<>();
+
+                KeyboardRow row = new KeyboardRow();
+                row.add("Phone Number");
+
+                keyboardRows.add(row);
+
+                keyboardMarkup.setKeyboard(keyboardRows);
+
+                message.setReplyMarkup(keyboardMarkup);
+
+                return message;
+            }
         }
+        return new SendMessage();
     }
 
     private void deleteMessage(Message msg) {
@@ -100,12 +147,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
 
         sendMessage.setChatId(chatId);
-        sendMessage.setText("You send /sharePhoneNumber");
+        sendMessage.setText("Put on the button: Share your number >");
 
         // create keyboard
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
-        replyKeyboardMarkup.setSelective(true);
+//        replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
 
@@ -154,15 +201,26 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void startCommandGreeting(long chatId, String name) {
+    private void startCommandGreeting(long chatId, String name, SendMessage message) {
         String answer = "Hi, " + name + ", nice to meet you there!\n\n" +
                 "Could you send me your phone number? This definitely help me to improve my work.\n" +
                 "/sharePhoneNumber";
-        sendMessage(chatId, answer);
+        sendMessageWithReplyKeyboard(chatId, answer, message);
     }
 
     private void sendMessage(long chatId, String textToSend) {
         SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(textToSend);
+
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void sendMessageWithReplyKeyboard(long chatId, String textToSend, SendMessage message) {
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
 
