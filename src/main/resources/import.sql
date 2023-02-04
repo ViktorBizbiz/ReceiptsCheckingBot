@@ -1,0 +1,2 @@
+insert into users (first_name, last_name, phone_number, registered_at, role, score, sold_packages, user_name, chat_id) values ('Никита', null, null, null, 'ADMIN', 0, 0, 'Terwolt', 770821020);
+insert into users (first_name, last_name, phone_number, registered_at, role, score, sold_packages, user_name, chat_id) values ('Viktor', 'Bizbiz', null, null, 'ADMIN', 0, 0, 'VityaBizbiz', 511002485)
