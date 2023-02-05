@@ -1,2 +1,2 @@
-insert into users (first_name, last_name, role, user_name, chat_id) values ('Никита', null, 'ADMIN', 'Terwolt', 770821020);
-insert into users (first_name, last_name, role, user_name, chat_id) values ('Viktor', 'Bizbiz', 'ADMIN', 'VityaBizbiz', 511002485)
+insert into users (user_id, first_name, last_name, role, user_name, chat_id) values (1, 'Никита', null, 'ADMIN', 'Terwolt', 770821020);
+insert into users (user_id, first_name, last_name, role, user_name, chat_id) values (2, 'Viktor', 'Bizbiz', 'ADMIN', 'VityaBizbiz', 511002485);

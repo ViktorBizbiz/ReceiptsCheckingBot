@@ -1,5 +1,6 @@
 package ua.bizbiz.receiptscheckingbot.service;
 
+import com.vdurmont.emoji.EmojiParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -43,22 +44,54 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        // check if update has message
         if (update.hasMessage()) {
+            // check if message has text
             if (update.getMessage().hasText()) {
+                // set local variables
                 Message msg = update.getMessage();
                 String messageText = msg.getText();
                 long chatId = msg.getChatId();
 
+                // check message text
                 if (messageText.equals("/start")) {
                     registerUser(msg);
                     startCommandGreeting(chatId, msg.getChat().getFirstName(), getMainMenuKeyboard(msg));
                 } else if (messageText.equals("/sharePhoneNumber")) {
                     phoneNumberRequest(chatId);
+                } else if (isAdmin(chatId)) {
+                    if (messageText.equals("Додати нового користувача")) {
+                        sendMessage(chatId,
+                                "Відправте мені дані користувача за наступним шаблоном:\n" +
+                                        "\"ПІП: Іванов Іван Іванович\"\n" +
+                                        "\"Адреса: адреса_аптеки\"\n" +
+                                        "\"Мережа: назва_мережі\"");
+                    } else if (messageText.startsWith("ПІП:")) {
+                        String fullName = messageText.substring(messageText.indexOf(" ") + 1,
+                                messageText.indexOf("\nАдреса: "));
+                        String address = messageText.substring(messageText.indexOf("\nАдреса: ") + "\nАдреса: ".length(),
+                                messageText.indexOf("\nМережа: "));
+                        String farmChain = messageText.substring(messageText.indexOf("\nМережа: ") + "\nМережа: ".length());
+
+                        userRepository.save(User.builder()
+                                .fullName(fullName)
+                                .address(address)
+                                .farmChain(farmChain)
+                                .role(Role.USER)
+                                .soldPackages(0)
+                                .score(0)
+                                .build());
+                        deleteMessage(msg);
+
+                        sendMessage(chatId, EmojiParser.parseToUnicode("Новий користувач був створений:white_check_mark:"));
+                        //TODO Create feature to send verification code
+                    }
                 } else {
                     sendMessageWithReplyKeyboard(chatId, "Sorry, command was not recognized",
                             getMainMenuKeyboard(msg));
                 }
             }
+            // check if message has contact
             if (update.getMessage().hasContact()) {
                 Message msg = update.getMessage();
                 saveUserPhoneNumber(msg.getContact());
@@ -69,54 +102,61 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    private boolean isAdmin(long chatId) {
+        Optional<User> user = userRepository.findByChatId(chatId);
+        return user.filter(value -> value.getRole() == Role.ADMIN).isPresent();
+    }
+
     private SendMessage getMainMenuKeyboard(Message msg) {
         long chatId = msg.getChatId();
-        Optional<User> user = userRepository.findById(chatId);
-        if (user.isPresent()) {
-            if (user.get().getRole() == Role.ADMIN) {
-                SendMessage message = new SendMessage();
+        // if user is Admin
+        if (isAdmin(chatId)) {
+            SendMessage message = new SendMessage();
 
-                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-                keyboardMarkup.setResizeKeyboard(true);
+            ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+            keyboardMarkup.setResizeKeyboard(true);
 
-                List<KeyboardRow> keyboardRows = new ArrayList<>();
+            List<KeyboardRow> keyboardRows = new ArrayList<>();
 
-                KeyboardRow row = new KeyboardRow();
-                row.add("Add user");
+            KeyboardRow row = new KeyboardRow();
+            row.add("Додати нового користувача");
 
-                keyboardRows.add(row);
+            keyboardRows.add(row);
 
-                keyboardMarkup.setKeyboard(keyboardRows);
+            keyboardMarkup.setKeyboard(keyboardRows);
 
-                message.setReplyMarkup(keyboardMarkup);
+            message.setReplyMarkup(keyboardMarkup);
 
-                return message;
-            } else {
-                SendMessage message = new SendMessage();
-                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-                keyboardMarkup.setResizeKeyboard(true);
+            return message;
+        } else {
+            SendMessage message = new SendMessage();
+            ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+            keyboardMarkup.setResizeKeyboard(true);
 
-                List<KeyboardRow> keyboardRows = new ArrayList<>();
+            List<KeyboardRow> keyboardRows = new ArrayList<>();
 
-                KeyboardRow row = new KeyboardRow();
-                row.add("Phone Number");
+            KeyboardRow row = new KeyboardRow();
+            row.add("Phone Number");
 
-                keyboardRows.add(row);
+            keyboardRows.add(row);
 
-                keyboardMarkup.setKeyboard(keyboardRows);
+            keyboardMarkup.setKeyboard(keyboardRows);
 
-                message.setReplyMarkup(keyboardMarkup);
+            message.setReplyMarkup(keyboardMarkup);
 
-                return message;
-            }
+            return message;
         }
-        return new SendMessage();
     }
 
     private void deleteMessage(Message msg) {
         DeleteMessage deleteMessage = new DeleteMessage();
         deleteMessage.setChatId(msg.getChatId());
         deleteMessage.setMessageId(msg.getMessageId());
+
+        deleteMessageExecutor(deleteMessage);
+    }
+
+    private void deleteMessageExecutor(DeleteMessage deleteMessage) {
         try {
             execute(deleteMessage);
         } catch (TelegramApiException e) {
@@ -125,10 +165,11 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void saveUserPhoneNumber(Contact contact) {
-        Optional<User> oldUser = userRepository.findById(contact.getUserId());
+        Optional<User> oldUser = userRepository.findByChatId(contact.getUserId());
         if (oldUser.isPresent()) {
             var existingUser = oldUser.get();
             User updatedUser = User.builder()
+                    .userId(existingUser.getUserId())
                     .chatId(existingUser.getChatId())
                     .firstName(existingUser.getFirstName())
                     .lastName(existingUser.getLastName())
@@ -138,21 +179,24 @@ public class TelegramBot extends TelegramLongPollingBot {
                     .soldPackages(existingUser.getSoldPackages())
                     .score(existingUser.getScore())
                     .role(existingUser.getRole())
+                    .fullName(existingUser.getFullName())
+                    .address(existingUser.getAddress())
+                    .farmChain(existingUser.getFarmChain())
                     .build();
             userRepository.save(updatedUser);
         }
     }
 
     private void phoneNumberRequest(long chatId) {
-        SendMessage sendMessage = new SendMessage();
+        SendMessage message = new SendMessage();
 
-        sendMessage.setChatId(chatId);
-        sendMessage.setText("Put on the button: Share your number >");
+        message.setChatId(chatId);
+        message.setText("Put on the button: Share your number >");
 
         // create keyboard
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        sendMessage.setReplyMarkup(replyKeyboardMarkup);
-//        replyKeyboardMarkup.setSelective(true);
+        message.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
 
@@ -172,8 +216,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         // add list to our keyboard
         replyKeyboardMarkup.setKeyboard(keyboard);
 
+        sendMessageExecutor(message);
+    }
+
+    private void sendMessageExecutor(SendMessage message) {
         try {
-            execute(sendMessage);
+            execute(message);
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
@@ -181,7 +229,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void registerUser(Message msg) {
 
-        if (userRepository.findById(msg.getChatId()).isEmpty()) {
+        if (userRepository.findByChatId(msg.getChatId()).isEmpty()) {
             var chatId = msg.getChatId();
             var chat = msg.getChat();
 
@@ -213,22 +261,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
 
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+        sendMessageExecutor(message);
     }
 
     private void sendMessageWithReplyKeyboard(long chatId, String textToSend, SendMessage message) {
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
 
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+        sendMessageExecutor(message);
     }
 
     @Scheduled(cron = "0 0 9 * * *")
@@ -236,8 +276,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void sendMotivationText() {
         var users = userRepository.findAll();
         for (User user : users) {
-            String motivation = "Hello, " + user.getFirstName() + "! Ничто так не согревает холодными ночами, как мысли о тебе))";
-            sendMessage(user.getChatId(), motivation);
+            String motivationText = "Hello, " + user.getFirstName() + "! Ничто так не согревает холодными ночами, как мысли о тебе))";
+            sendMessage(user.getChatId(), motivationText);
         }
     }
 }

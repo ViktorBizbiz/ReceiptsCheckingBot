@@ -15,7 +15,14 @@ import java.sql.Timestamp;
 @Table(name = "users")
 public class User {
 
+    static final String SEQ_NAME = "user_seq";
+
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = SEQ_NAME)
+    @SequenceGenerator(name = SEQ_NAME, sequenceName = SEQ_NAME, allocationSize = 1, initialValue = 3)
+    @Column(name = "user_id")
+    Long userId;
+
     @Column(name = "chat_id")
     Long chatId;
 
@@ -43,6 +50,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     Role role;
+
+    @Column(name = "full_name")
+    String fullName;
+
+    @Column(name = "address")
+    String address;
+
+    @Column(name = "farm_chain")
+    String farmChain;
 
 }
 
