@@ -135,9 +135,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                     .userName(existingUser.getUserName())
                     .phoneNumber(contact.getPhoneNumber())
                     .registeredAt(existingUser.getRegisteredAt())
-                    .soldPackages(0)
-                    .score(0)
-                    .role(Role.USER)
+                    .soldPackages(existingUser.getSoldPackages())
+                    .score(existingUser.getScore())
+                    .role(existingUser.getRole())
                     .build();
             userRepository.save(updatedUser);
         }
