@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-import ua.bizbiz.receiptscheckingbot.service.TelegramBot;
+import ua.bizbiz.receiptscheckingbot.bot.TelegramBot;
 
 @Component
 @RequiredArgsConstructor

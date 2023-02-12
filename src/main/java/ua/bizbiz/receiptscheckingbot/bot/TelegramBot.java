@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.service;
+package ua.bizbiz.receiptscheckingbot.bot;
 
 import com.vdurmont.emoji.EmojiParser;
 import lombok.RequiredArgsConstructor;
