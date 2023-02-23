@@ -23,17 +23,9 @@ public class User {
     @Column(name = "user_id")
     Long userId;
 
-    @Column(name = "chat_id")
-    Long chatId;
-
-    @Column(name = "first_name")
-    String firstName;
-
-    @Column(name = "last_name")
-    String lastName;
-
-    @Column(name = "user_name")
-    String userName;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "chat_id", referencedColumnName = "id")
+    Chat chat;
 
     @Column(name = "phone_number")
     String phoneNumber;
@@ -47,7 +39,7 @@ public class User {
     @Column(name = "score")
     Integer score;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "role")
     Role role;
 
@@ -57,8 +49,14 @@ public class User {
     @Column(name = "address")
     String address;
 
-    @Column(name = "farm_chain")
-    String farmChain;
+    @Column(name = "pharmacy_chain")
+    String pharmacyChain;
+
+    @Column(name = "city_of_pharmacy")
+    String cityOfPharmacy;
+
+    @Column(name = "secret_code")
+    Long secretCode;
 
 }
 
