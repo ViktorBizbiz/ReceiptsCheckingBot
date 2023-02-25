@@ -3,9 +3,11 @@ package ua.bizbiz.receiptscheckingbot.bot.handlers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.AnnouncementCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.MainCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.*;
@@ -49,12 +51,100 @@ public class MessageHandler {
                     responses = processCommand(command.get(), chat);
                 }
             }
+            case SENDING_ANNOUNCEMENT -> {
+                Optional<AnnouncementCommandType> command = AnnouncementCommandType.parse(text);
+                if (command.isPresent()) {
+                    responses = processCommand(command.get(), chat);
+                }
+            }
+            case SENDING_ANNOUNCEMENT_TO_ALL, SENDING_ANNOUNCEMENT_TO_PERSON ->
+                    responses = processAnnouncement(text, chat);
             /*case GETTING_REPORT -> ;
             case GETTING_PROMOTIONS -> ;*/
         }
 
         chatRepository.save(chat);
         return responses;
+    }
+
+    private List<PartialBotApiMethod<Message>> processAnnouncement(String text, Chat chat) {
+        List<PartialBotApiMethod<Message>> responses = new ArrayList<>();
+        Optional<List<User>> users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+        switch (chat.getStatus()) {
+            case SENDING_ANNOUNCEMENT_TO_ALL -> {
+                if (users.isPresent() && users.get().size() != 0) {
+                    for (User user : users.get()) {
+                        responses.add(SendMessage.builder()
+                                .chatId(user.getChat().getChatId())
+                                .text("[Від: " + chat.getUser().getFullName() + "]\n" + text)
+                                .build());
+                    }
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            "✅ Повідомлення було відправлено усім.").process(chat));
+                } else {
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    Ще немає жодного користувача, або він ще не авторизувався у боті.
+                                    Спочатку додайте хоча б одного та переконайтеся, що він авторизований.
+
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                }
+            }
+            case SENDING_ANNOUNCEMENT_TO_PERSON -> {
+                String userId = text.substring(0, text.indexOf("\n"));
+                text = text.substring(text.indexOf("\n"));
+                Optional<User> user = userRepository.findById(Long.parseLong(userId));
+                if (user.isPresent()) {
+                    responses.add(SendMessage.builder()
+                            .chatId(user.get().getChat().getChatId())
+                            .text("[Від: " + chat.getUser().getFullName() + "]\n" + text)
+                            .build());
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            "✅ Повідомлення було відправлено.").process(chat));
+                } else {
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    За таким ID користувачів не існує.
+
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                }
+            }
+        }
+        return responses;
+    }
+
+    private List<PartialBotApiMethod<Message>> processCommand(AnnouncementCommandType command, Chat chat) {
+        List<ProcessableCommand> processableCommands = new ArrayList<>();
+        switch (command) {
+            case TO_PERSON -> {
+                Optional<List<User>> users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+                StringBuilder userList = new StringBuilder();
+                if (users.isPresent() && users.get().size() != 0) {
+                    for (User user : users.get()) {
+                        userList.append(user.getUserId()).append(". ").append(user.getFullName()).append("\n");
+                    }
+                    userList.append("""
+
+                            Введіть ID користувача, якому ви хочете відправити повідомлення та саме повідомлення за наступним шаблоном:
+                            ID
+                            ваше_повідомлення
+                            """);
+                    processableCommands.add(new MakeAnnouncementToPersonCommand(userList.toString()));
+                } else {
+                    processableCommands.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    Ще немає жодного користувача, або він ще не авторизувався у боті.
+                                    Спочатку додайте хоча б одного та переконайтеся, що він авторизований.
+
+                                    Чим ще я можу допомогти вам?"""));
+                }
+            }
+            case TO_ALL -> processableCommands.add(new MakeAnnouncementToAllCommand());
+        }
+        assert !processableCommands.isEmpty();
+        return processableCommands.stream()
+                .map(com -> com.process(chat))
+                .toList();
     }
 
     private List<PartialBotApiMethod<Message>> processSecretCode(String text, Chat chat) {
@@ -113,7 +203,7 @@ public class MessageHandler {
                 .build());
 
         return Collections.singletonList(
-                new StartCommand(chat.getUser().getRole(), "Новий користувач був створений ✅\n\n" +
+                new StartCommand(chat.getUser().getRole(), "✅ Новий користувач був створений.\n\n" +
                         "\uD83D\uDD10 Перешліть йому цей код доступу: " + secretCode).process(chat));
     }
 
@@ -135,17 +225,23 @@ public class MessageHandler {
         switch (command) {
             case ADD_NEW_USER -> processableCommands.add(new AddUserCommand(ChatStatus.CREATING_NEW_USER));
             case CREATE_REPORT -> {
-                var reportData = userRepository.findAll().stream()
-                        .filter(user -> user.getRole() == Role.USER)
-                        .toList();
-                processableCommands.add(new CreateReportCommand(reportData));
-                processableCommands.add(new HomeCommand(chat.getUser().getRole()));
+                Optional<List<User>> reportData = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+                if (reportData.isPresent() && reportData.get().size() != 0) {
+                    processableCommands.add(new CreateReportCommand(reportData.get()));
+                    processableCommands.add(new HomeCommand(chat.getUser().getRole()));
+                } else {
+                    processableCommands.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    Ще немає жодного користувача, або він ще не авторизувався у боті.
+                                    Спочатку додайте хоча б одного та переконайтеся, що він авторизований.
+
+                                    Чим ще я можу допомогти вам?"""));
+                }
             }
             //TODO change commands
             case ADMIN_SHOW_PROMOTIONS -> processableCommands.add(
                     new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
-            case MAKE_AN_ANNOUNCEMENT -> processableCommands.add(
-                    new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
+            case MAKE_AN_ANNOUNCEMENT -> processableCommands.add(new MakeAnnouncementCommand());
             case USER_SHOW_PROMOTIONS -> processableCommands.add(
                     new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
             case SEND_RECEIPT -> processableCommands.add(

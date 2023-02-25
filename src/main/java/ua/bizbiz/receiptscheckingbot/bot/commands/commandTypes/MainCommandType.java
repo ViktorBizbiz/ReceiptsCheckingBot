@@ -16,7 +16,6 @@ public enum MainCommandType {
     MAKE_AN_ANNOUNCEMENT("Зробити оголошення \uD83D\uDCE3"),
 
     // User commands
-    //TODO add user commands
     USER_SHOW_PROMOTIONS("Актуальні акції \uD83D\uDC8A"),
     SEND_RECEIPT("Відправити чек \uD83E\uDDFE"),
     BALANCE("Баланс \uD83D\uDCB0");
