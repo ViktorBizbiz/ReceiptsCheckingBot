@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Builder
 @Data
@@ -58,5 +59,12 @@ public class User {
     @Column(name = "secret_code")
     Long secretCode;
 
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_promotion",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "promotion_id")
+    )
+    List<Promotion> promotions;
 }
 

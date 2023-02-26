@@ -10,12 +10,11 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.AnnouncementCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.MainCommandType;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.PromotionCrudCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.*;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
+import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 
 import java.sql.Timestamp;
@@ -31,7 +30,8 @@ public class MessageHandler {
     private static final String TELEGRAM_COMMAND_PREFIX = "/";
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
-    
+    private final PromotionRepository promotionRepository;
+
     public List<PartialBotApiMethod<Message>> handle(Update update) {
         Chat chat = provideChatRecord(update.getMessage().getChatId());
         String text = update.getMessage().getText();
@@ -41,10 +41,8 @@ public class MessageHandler {
             return responses;
 
         switch (chat.getStatus()) {
-            case CREATING_NEW_USER -> responses =
-                processUserDataAdding(text, chat);
-            case ENTERING_SECRET_CODE -> responses =
-                processSecretCode(text, chat);
+            case CREATING_NEW_USER -> responses = processUserDataAdding(text, chat);
+            case ENTERING_SECRET_CODE -> responses = processSecretCode(text, chat);
             case AUTHORIZED_AS_ADMIN, AUTHORIZED_AS_USER -> {
                 Optional<MainCommandType> command = MainCommandType.parse(text);
                 if (command.isPresent()) {
@@ -58,13 +56,102 @@ public class MessageHandler {
                 }
             }
             case SENDING_ANNOUNCEMENT_TO_ALL, SENDING_ANNOUNCEMENT_TO_PERSON ->
-                    responses = processAnnouncement(text, chat);
-            /*case GETTING_REPORT -> ;
-            case GETTING_PROMOTIONS -> ;*/
+                responses = processAnnouncement(text, chat);
+            case GETTING_PROMOTIONS -> {
+                Optional<PromotionCrudCommandType> command = PromotionCrudCommandType.parse(text);
+                if (command.isPresent()) {
+                    responses = processCommand(command.get(), chat);
+                }
+            }
+            case CREATING_PROMOTION, UPDATING_PROMOTION, DELETING_PROMOTION ->
+                responses = processPromotion(text, chat);
+//            case GETTING_REPORT -> ;
         }
 
         chatRepository.save(chat);
         return responses;
+    }
+
+    private List<PartialBotApiMethod<Message>> processPromotion(String text, Chat chat) {
+        List<PartialBotApiMethod<Message>> responses = new ArrayList<>();
+        String[] splittedText = text.split("\n");
+        switch (chat.getStatus()) {
+            case CREATING_PROMOTION -> {
+                String name = splittedText[0];
+                int minQuantity = Integer.parseInt(splittedText[1]);
+                int completionBonus = Integer.parseInt(splittedText[2]);
+                int resaleBonus = Integer.parseInt(splittedText[3]);
+                promotionRepository.save(Promotion.builder()
+                        .name(name)
+                        .minQuantity(minQuantity)
+                        .completionBonus(completionBonus)
+                        .resaleBonus(resaleBonus)
+                        .build());
+                responses.add(new StartCommand(chat.getUser().getRole(),
+                        """
+                                ✅ Акцію успішно створено.
+
+                                Чим ще я можу допомогти вам?""").process(chat));
+            }
+            case UPDATING_PROMOTION -> {
+                long id = Long.parseLong(splittedText[0]);
+                String name = splittedText[1];
+                int minQuantity = Integer.parseInt(splittedText[2]);
+                int completionBonus = Integer.parseInt(splittedText[3]);
+                int resaleBonus = Integer.parseInt(splittedText[4]);
+                if (promotionRepository.existsById(id)) {
+                    promotionRepository.save(Promotion.builder()
+                            .id(id)
+                            .name(name)
+                            .minQuantity(minQuantity)
+                            .completionBonus(completionBonus)
+                            .resaleBonus(resaleBonus)
+                            .build());
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                        """
+                                ✅ Акцію успішно змінено.
+
+                                Чим ще я можу допомогти вам?""").process(chat));
+                } else {
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                        """
+                                ⚠️ За даним ID акцій не існує.
+                                        
+                                Чим ще я можу допомогти вам?""").process(chat));
+                }
+            }
+            case DELETING_PROMOTION -> {
+                long id = Long.parseLong(text);
+                if (promotionRepository.existsById(id)) {
+                    promotionRepository.deleteById(id);
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    ✅ Акцію успішно видалено.
+    
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                } else {
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    ⚠️ За даним ID акцій не існує.
+                                            
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                }
+            }
+        }
+        return responses;
+    }
+
+    private List<PartialBotApiMethod<Message>> processCommand(PromotionCrudCommandType command, Chat chat) {
+        List<ProcessableCommand> processableCommands = new ArrayList<>();
+        switch (command) {
+            case CREATE_PROMOTION -> processableCommands.add(new CreatePromotionCommand());
+            case UPDATE_PROMOTION -> processableCommands.add(new UpdatePromotionCommand());
+            case DELETE_PROMOTION -> processableCommands.add(new DeletePromotionCommand());
+        }
+        assert !processableCommands.isEmpty();
+        return processableCommands.stream()
+                .map(com -> com.process(chat))
+                .toList();
     }
 
     private List<PartialBotApiMethod<Message>> processAnnouncement(String text, Chat chat) {
@@ -239,8 +326,14 @@ public class MessageHandler {
                 }
             }
             //TODO change commands
-            case ADMIN_SHOW_PROMOTIONS -> processableCommands.add(
-                    new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
+            case ADMIN_SHOW_PROMOTIONS -> {
+                List<Promotion> promotions = promotionRepository.findAll();
+                if (promotions.size() != 0) {
+                    processableCommands.add(new AdminShowPromotionsCommand(promotions));
+                } else {
+                    processableCommands.add(new AdminShowPromotionsCommand());
+                }
+            }
             case MAKE_AN_ANNOUNCEMENT -> processableCommands.add(new MakeAnnouncementCommand());
             case USER_SHOW_PROMOTIONS -> processableCommands.add(
                     new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
