@@ -16,13 +16,10 @@ import java.util.List;
 @Table(name = "users")
 public class User {
 
-    static final String SEQ_NAME = "user_seq";
-
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = SEQ_NAME)
-    @SequenceGenerator(name = SEQ_NAME, sequenceName = SEQ_NAME, allocationSize = 1, initialValue = 3)
-    @Column(name = "user_id")
-    Long userId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    Long id;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "chat_id", referencedColumnName = "id")
@@ -59,12 +56,7 @@ public class User {
     @Column(name = "secret_code")
     Long secretCode;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_promotion",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "promotion_id")
-    )
-    List<Promotion> promotions;
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    List<Subscription> subscriptions;
 }
 

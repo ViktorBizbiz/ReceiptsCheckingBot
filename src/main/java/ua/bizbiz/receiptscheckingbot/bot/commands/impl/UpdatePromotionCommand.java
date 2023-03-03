@@ -1,8 +1,7 @@
 package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
 
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -17,7 +16,7 @@ public class UpdatePromotionCommand implements ProcessableCommand {
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
     @Override
-    public PartialBotApiMethod<Message> process(Chat chat) {
+    public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
         return SendMessage.builder()
                 .text(responseMessageText)

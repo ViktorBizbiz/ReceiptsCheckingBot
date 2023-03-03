@@ -1,14 +1,13 @@
 package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
 
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 
 public class HomeCommand extends StartCommand {
 
     @Override
-    public PartialBotApiMethod<Message> process(Chat chat) {
+    public Validable process(Chat chat) {
         return super.process(chat);
     }
 

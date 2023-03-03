@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
-
 @Builder
 @Data
 @NoArgsConstructor
@@ -32,9 +30,6 @@ public class Promotion {
     @Column(name = "resale_bonus")
     Integer resaleBonus;
 
-    @Column(name = "current_quantity")
-    Integer currentQuantity;
-
-    @ManyToMany(mappedBy = "promotions")
-    List<User> users;
+    @OneToOne(mappedBy = "promotion")
+    Subscription subscription;
 }

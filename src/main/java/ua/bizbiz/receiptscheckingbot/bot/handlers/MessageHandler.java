@@ -2,9 +2,8 @@ package ua.bizbiz.receiptscheckingbot.bot.handlers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.AnnouncementCommandType;
@@ -16,12 +15,10 @@ import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
+import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -32,39 +29,38 @@ public class MessageHandler {
     private final ChatRepository chatRepository;
     private final PromotionRepository promotionRepository;
 
-    public List<PartialBotApiMethod<Message>> handle(Update update) {
+    public List<Validable> handle(Update update) {
         Chat chat = provideChatRecord(update.getMessage().getChatId());
         String text = update.getMessage().getText();
+        int messageId = update.getMessage().getMessageId();
 
-        List<PartialBotApiMethod<Message>> responses = tryProcessHomeCommand(text, chat);
+        List<Validable> responses = tryProcessHomeCommand(text, chat);
+
         if (responses.size() != 0)
             return responses;
 
         switch (chat.getStatus()) {
-            case CREATING_NEW_USER -> responses = processUserDataAdding(text, chat);
-            case ENTERING_SECRET_CODE -> responses = processSecretCode(text, chat);
+            case CREATING_NEW_USER -> responses.addAll(processUserDataAdding(text, chat));
+            case ENTERING_SECRET_CODE -> responses.addAll(processSecretCode(text, chat, messageId));
             case AUTHORIZED_AS_ADMIN, AUTHORIZED_AS_USER -> {
                 Optional<MainCommandType> command = MainCommandType.parse(text);
-                if (command.isPresent()) {
-                    responses = processCommand(command.get(), chat);
-                }
+                command.ifPresent(mainCommandType ->
+                        responses.addAll(processCommand(mainCommandType, chat)));
             }
             case SENDING_ANNOUNCEMENT -> {
                 Optional<AnnouncementCommandType> command = AnnouncementCommandType.parse(text);
-                if (command.isPresent()) {
-                    responses = processCommand(command.get(), chat);
-                }
+                command.ifPresent(announcementCommandType ->
+                        responses.addAll(processCommand(announcementCommandType, chat)));
             }
             case SENDING_ANNOUNCEMENT_TO_ALL, SENDING_ANNOUNCEMENT_TO_PERSON ->
-                responses = processAnnouncement(text, chat);
-            case GETTING_PROMOTIONS -> {
+                responses.addAll(processAnnouncement(text, chat));
+            case ADMIN_GETTING_PROMOTIONS -> {
                 Optional<PromotionCrudCommandType> command = PromotionCrudCommandType.parse(text);
-                if (command.isPresent()) {
-                    responses = processCommand(command.get(), chat);
-                }
+                command.ifPresent(promotionCrudCommandType ->
+                        responses.addAll(processCommand(promotionCrudCommandType, chat)));
             }
             case CREATING_PROMOTION, UPDATING_PROMOTION, DELETING_PROMOTION ->
-                responses = processPromotion(text, chat);
+                responses.addAll(processPromotion(text, chat));
 //            case GETTING_REPORT -> ;
         }
 
@@ -72,8 +68,8 @@ public class MessageHandler {
         return responses;
     }
 
-    private List<PartialBotApiMethod<Message>> processPromotion(String text, Chat chat) {
-        List<PartialBotApiMethod<Message>> responses = new ArrayList<>();
+    private List<Validable> processPromotion(String text, Chat chat) {
+        List<Validable> responses = new ArrayList<>();
         String[] splittedText = text.split("\n");
         switch (chat.getStatus()) {
             case CREATING_PROMOTION -> {
@@ -141,7 +137,7 @@ public class MessageHandler {
         return responses;
     }
 
-    private List<PartialBotApiMethod<Message>> processCommand(PromotionCrudCommandType command, Chat chat) {
+    private List<Validable> processCommand(PromotionCrudCommandType command, Chat chat) {
         List<ProcessableCommand> processableCommands = new ArrayList<>();
         switch (command) {
             case CREATE_PROMOTION -> processableCommands.add(new CreatePromotionCommand());
@@ -154,8 +150,8 @@ public class MessageHandler {
                 .toList();
     }
 
-    private List<PartialBotApiMethod<Message>> processAnnouncement(String text, Chat chat) {
-        List<PartialBotApiMethod<Message>> responses = new ArrayList<>();
+    private List<Validable> processAnnouncement(String text, Chat chat) {
+        List<Validable> responses = new ArrayList<>();
         Optional<List<User>> users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
         switch (chat.getStatus()) {
             case SENDING_ANNOUNCEMENT_TO_ALL -> {
@@ -200,7 +196,7 @@ public class MessageHandler {
         return responses;
     }
 
-    private List<PartialBotApiMethod<Message>> processCommand(AnnouncementCommandType command, Chat chat) {
+    private List<Validable> processCommand(AnnouncementCommandType command, Chat chat) {
         List<ProcessableCommand> processableCommands = new ArrayList<>();
         switch (command) {
             case TO_PERSON -> {
@@ -208,7 +204,7 @@ public class MessageHandler {
                 StringBuilder userList = new StringBuilder();
                 if (users.isPresent() && users.get().size() != 0) {
                     for (User user : users.get()) {
-                        userList.append(user.getUserId()).append(". ").append(user.getFullName()).append("\n");
+                        userList.append(user.getId()).append(". ").append(user.getFullName()).append("\n");
                     }
                     userList.append("""
 
@@ -234,33 +230,50 @@ public class MessageHandler {
                 .toList();
     }
 
-    private List<PartialBotApiMethod<Message>> processSecretCode(String text, Chat chat) {
-        Optional<User> user = userRepository.findBySecretCode(Long.parseLong(text));
+    private List<Validable> processSecretCode(String text, Chat chat, int messageId) {
+        List<Validable> responses = new ArrayList<>();
+        long secretCode = Long.parseLong(text);
+        Optional<User> user = userRepository.findBySecretCode(secretCode);
         if (user.isPresent()) {
             User existingUser = user.get();
-            userRepository.save(User.builder()
-                    .userId(existingUser.getUserId())
-                    .chat(chat)
-                    .phoneNumber(existingUser.getPhoneNumber())
-                    .registeredAt(new Timestamp(System.currentTimeMillis()))
-                    .soldPackages(0)
-                    .score(0)
-                    .role(existingUser.getRole())
-                    .fullName(existingUser.getFullName())
-                    .address(existingUser.getAddress())
-                    .pharmacyChain(existingUser.getPharmacyChain())
-                    .cityOfPharmacy(existingUser.getCityOfPharmacy())
-                    .secretCode(existingUser.getSecretCode())
-                    .build());
+            if (userRepository.existsBySecretCodeAndChatIsNull(secretCode)) {
+                userRepository.save(User.builder()
+                        .id(existingUser.getId())
+                        .chat(chat)
+                        .phoneNumber(existingUser.getPhoneNumber())
+                        .registeredAt(new Timestamp(System.currentTimeMillis()))
+                        .soldPackages(0)
+                        .score(0)
+                        .role(existingUser.getRole())
+                        .fullName(existingUser.getFullName())
+                        .address(existingUser.getAddress())
+                        .pharmacyChain(existingUser.getPharmacyChain())
+                        .cityOfPharmacy(existingUser.getCityOfPharmacy())
+                        .secretCode(existingUser.getSecretCode())
+                        .build());
+            } else {
+                if (!existingUser.getChat().getChatId().equals(chat.getChatId())) {
+                    responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
+                    responses.add(new DefaultStartCommand(
+                            "⚠️ Невірний код. \nАвторизація не пройдена. Спробуйте ще раз.").process(chat));
+                    return responses;
+                }
+            }
+
             Chat chatWithUser = chatRepository.findByChatId(chat.getChatId());
-            return Collections.singletonList(new StartCommand(chatWithUser.getUser().getRole(),
+
+            responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
+            responses.add(new StartCommand(chatWithUser.getUser().getRole(),
                     "✅ Авторизація пройшла успішно.").process(chat));
+        } else {
+            responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
+            responses.add(new DefaultStartCommand(
+                    "⚠️ Невірний код. \nАвторизація не пройдена. Спробуйте ще раз.").process(chat));
         }
-        return Collections.singletonList(new DefaultStartCommand(
-                "⚠️ Невірний код. \nАвторизація не пройдена. Спробуйте ще раз.").process(chat));
+        return responses;
     }
 
-    private List<PartialBotApiMethod<Message>> processUserDataAdding(String text, Chat chat) {
+    private List<Validable> processUserDataAdding(String text, Chat chat) {
         String fullName = text.substring(text.indexOf(" ") + 1,
                 text.indexOf("\nАдреса: "));
         String address = text.substring(text.indexOf("\nАдреса: ") + "\nАдреса: ".length(),
@@ -294,8 +307,8 @@ public class MessageHandler {
                         "\uD83D\uDD10 Перешліть йому цей код доступу: " + secretCode).process(chat));
     }
 
-    private List<PartialBotApiMethod<Message>> tryProcessHomeCommand(String text, Chat chat) {
-        List<PartialBotApiMethod<Message>> responses = new ArrayList<>();
+    private List<Validable> tryProcessHomeCommand(String text, Chat chat) {
+        List<Validable> responses = new ArrayList<>();
         if (isTelegramCommand(text)) {
             text = text.substring(TELEGRAM_COMMAND_PREFIX.length());
         }
@@ -307,7 +320,7 @@ public class MessageHandler {
         return responses;
     }
 
-    private List<PartialBotApiMethod<Message>> processCommand(MainCommandType command, Chat chat) {
+    private List<Validable> processCommand(MainCommandType command, Chat chat) {
         List<ProcessableCommand> processableCommands = new ArrayList<>();
         switch (command) {
             case ADD_NEW_USER -> processableCommands.add(new AddUserCommand(ChatStatus.CREATING_NEW_USER));
@@ -335,10 +348,19 @@ public class MessageHandler {
                 }
             }
             case MAKE_AN_ANNOUNCEMENT -> processableCommands.add(new MakeAnnouncementCommand());
-            case USER_SHOW_PROMOTIONS -> processableCommands.add(
-                    new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
-            case SEND_RECEIPT -> processableCommands.add(
-                    new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
+            case USER_SHOW_PROMOTIONS -> {
+                List<Promotion> promotions = promotionRepository.findAll();
+                if (promotions.size() != 0) {
+                    processableCommands.add(new UserShowPromotionsCommand(promotions, chat));
+                } else {
+                    processableCommands.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    Ще немає жодної акції.
+
+                                    Чим ще я можу допомогти вам?"""));
+                }
+            }
+            case SEND_RECEIPT -> processableCommands.add(new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
             case BALANCE -> processableCommands.add(
                     new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
         }
@@ -348,14 +370,13 @@ public class MessageHandler {
                 .toList();
     }
 
-    private List<PartialBotApiMethod<Message>> processCommand(HomeCommandType command, Chat chat) {
-        ProcessableCommand processableCommand = null;
+    private List<Validable> processCommand(HomeCommandType command, Chat chat) {
+        List<Validable> responses = new ArrayList<>();
         switch (command) {
-            case START -> processableCommand = new DefaultStartCommand();
-            case HOME -> processableCommand = new HomeCommand(chat.getUser().getRole());
+            case START -> responses.add(new DefaultStartCommand().process(chat));
+            case HOME -> responses.add(new HomeCommand(chat.getUser().getRole()).process(chat));
         }
-        assert processableCommand != null;
-        return Collections.singletonList(processableCommand.process(chat));
+        return responses;
     }
 
     private boolean isTelegramCommand(String text) {

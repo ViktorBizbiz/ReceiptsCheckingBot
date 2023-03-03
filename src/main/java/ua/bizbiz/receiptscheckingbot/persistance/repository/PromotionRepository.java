@@ -9,4 +9,6 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
 
     boolean existsById(Long id);
 
+
+
 }

@@ -1,14 +1,13 @@
 package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
 
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.PromotionCrudCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.PromotionCrudCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Promotion;
@@ -21,7 +20,7 @@ public class AdminShowPromotionsCommand implements ProcessableCommand {
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
     @Override
-    public PartialBotApiMethod<Message> process(Chat chat) {
+    public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
         return SendMessage.builder()
                 .text(responseMessageText)
@@ -44,7 +43,7 @@ public class AdminShowPromotionsCommand implements ProcessableCommand {
         }
         responseMessageText = promotionsList.toString();
 
-        chatStatus = ChatStatus.GETTING_PROMOTIONS;
+        chatStatus = ChatStatus.ADMIN_GETTING_PROMOTIONS;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(PromotionCrudCommandType.CREATE_PROMOTION.getName());
@@ -73,7 +72,7 @@ public class AdminShowPromotionsCommand implements ProcessableCommand {
                             Спочатку додайте хоча б одну.
                             """;
 
-        chatStatus = ChatStatus.GETTING_PROMOTIONS;
+        chatStatus = ChatStatus.ADMIN_GETTING_PROMOTIONS;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(PromotionCrudCommandType.CREATE_PROMOTION.getName());
