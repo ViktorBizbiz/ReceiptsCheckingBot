@@ -41,7 +41,8 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
                             """, promotion.getName(), promotion.getMinQuantity(),
                     promotion.getCompletionBonus(), promotion.getResaleBonus()));
         }
-        promotionsList.append("\uD83D\uDC47\uD83C\uDFFB Оберіть нижче, на яку акцію ви хочете підписатися.");
+        promotionsList.append("\uD83D\uDC47\uD83C\uDFFB Оберіть нижче, на яку акцію ви хочете підписатися/відписатися.\n\n");
+        promotionsList.append("❗️❗️❗️ Зверніть увагу! Якщо ви відпишетеся від акції, то втратите увесь прогрес по ній.");
         responseMessageText = promotionsList.toString();
 
         chatStatus = ChatStatus.USER_GETTING_PROMOTIONS;

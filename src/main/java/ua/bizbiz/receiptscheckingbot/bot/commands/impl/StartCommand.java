@@ -40,9 +40,13 @@ public class StartCommand implements ProcessableCommand {
             row2.add(MainCommandType.ADD_NEW_USER.getName());
             row2.add(MainCommandType.MAKE_AN_ANNOUNCEMENT.getName());
 
+            KeyboardRow row3 = new KeyboardRow();
+            row3.add(MainCommandType.CHECK_RECEIPTS.getName());
+
             keyboard = ReplyKeyboardMarkup.builder()
                     .keyboardRow(row1)
                     .keyboardRow(row2)
+                    .keyboardRow(row3)
                     .resizeKeyboard(true)
                     .oneTimeKeyboard(true)
                     .build();

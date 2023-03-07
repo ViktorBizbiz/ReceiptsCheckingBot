@@ -18,4 +18,7 @@ public class DeleteUtils {
     public static DeleteMessage deleteMessage(int messageId, Chat chat) {
         return new DeleteMessage(chat.getChatId().toString(), messageId);
     }
+    public static DeleteMessage deleteMessage(int messageId, Long chatId) {
+        return new DeleteMessage(chatId.toString(), messageId);
+    }
 }

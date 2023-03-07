@@ -10,12 +10,17 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.CallbackHandler;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.MessageHandler;
+import ua.bizbiz.receiptscheckingbot.bot.handlers.PhotoHandler;
 import ua.bizbiz.receiptscheckingbot.config.BotConfig;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
+import ua.bizbiz.receiptscheckingbot.util.DataHolder;
+import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,12 +29,11 @@ import java.util.List;
 public class TelegramBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
-
     private final UserRepository userRepository;
-
     private final MessageHandler messageHandler;
-
     private final CallbackHandler callbackHandler;
+    private final PhotoHandler photoHandler;
+    private final DataHolder dataHolder;
 
     @Override
     public String getBotUsername() {
@@ -52,13 +56,15 @@ public class TelegramBot extends TelegramLongPollingBot {
         } else if (update.hasMessage()) {
             if (update.getMessage().hasText()) {
                 responses = messageHandler.handle(update);
+            } else if (update.getMessage().hasPhoto()) {
+                responses = photoHandler.handle(update);
             }
         }
         for (Validable response : responses) {
             if (response instanceof SendMessage)
                 execute((SendMessage) response);
             else if (response instanceof SendPhoto)
-                execute((SendPhoto) response);
+                executeAndRememberMessageId((SendPhoto) response);
             else if (response instanceof SendDocument)
                 execute((SendDocument) response);
             else if (response instanceof EditMessageReplyMarkup)
@@ -66,27 +72,20 @@ public class TelegramBot extends TelegramLongPollingBot {
             else if (response instanceof DeleteMessage)
                 execute((DeleteMessage) response);
         }
-        /**if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
+    }
 
-            // define your command chain here
-            List<String> commandChain = Arrays.asList("Додати нового користувача \uD83D\uDC64", "", "◀️ Назад");
+    @SneakyThrows
+    private void executeAndRememberMessageId(SendPhoto response) {
+        Message sentPhoto = execute(response);
 
-            // check if the message text matches the last command in the chain
-            if (commandChain.contains(messageText) && commandChain.indexOf(messageText) == commandChain.size() - 1) {
-                int lastCommandIndex = commandChain.lastIndexOf(messageText);
-                Long chatId = update.getMessage().getChatId();
-                Integer messageId = update.getMessage().getMessageId();
+        Long chatId = sentPhoto.getChatId();
+        Integer messageId = sentPhoto.getMessageId();
 
+        List<PhotoMessageData> photoMessages = dataHolder.getPhotoMessages();
+        LocalDateTime photoCreationTime = dataHolder.getPhotoCreationTime();
 
-                // delete all messages above the last command in the chain
-                for (int i = messageId; i >= messageId - (lastCommandIndex + 1); i--) {
-                    DeleteMessage deleteMessage = new DeleteMessage(chatId.toString(), i);
-                    execute(deleteMessage);
-                }
+        photoMessages.add(new PhotoMessageData(messageId, chatId, photoCreationTime));
 
-                // add your logic for handling the command chain here
-            }
-        }*/
+        dataHolder.setPhotoMessages(photoMessages);
     }
 }

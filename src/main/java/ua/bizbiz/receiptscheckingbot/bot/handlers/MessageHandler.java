@@ -14,6 +14,7 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.impl.*;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
+import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 
@@ -28,6 +29,7 @@ public class MessageHandler {
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
     private final PromotionRepository promotionRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     public List<Validable> handle(Update update) {
         Chat chat = provideChatRecord(update.getMessage().getChatId());
@@ -348,6 +350,7 @@ public class MessageHandler {
                 }
             }
             case MAKE_AN_ANNOUNCEMENT -> processableCommands.add(new MakeAnnouncementCommand());
+            case CHECK_RECEIPTS -> processableCommands.add(new CheckReceiptsCommand());
             case USER_SHOW_PROMOTIONS -> {
                 List<Promotion> promotions = promotionRepository.findAll();
                 if (promotions.size() != 0) {
@@ -360,7 +363,15 @@ public class MessageHandler {
                                     Чим ще я можу допомогти вам?"""));
                 }
             }
-            case SEND_RECEIPT -> processableCommands.add(new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
+            case SEND_RECEIPT -> {
+                List<Subscription> subscriptions = subscriptionRepository.findAllByUserId(chat.getUser().getId());
+                if (subscriptions.size() != 0) {
+                    processableCommands.add(new SendReceiptCommand(subscriptions));
+                } else {
+                    processableCommands.add(new StartCommand(chat.getUser().getRole(),
+                            "⚠️ У вас ще немає жодної підписки.\nСпочатку підпишіться хоча б на одну акцію."));
+                }
+            }
             case BALANCE -> processableCommands.add(
                     new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
         }

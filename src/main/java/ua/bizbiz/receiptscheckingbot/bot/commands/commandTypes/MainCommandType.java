@@ -14,6 +14,7 @@ public enum MainCommandType {
     CREATE_REPORT("Створити звіт \uD83D\uDCC1"),
     ADMIN_SHOW_PROMOTIONS("Показати акції \uD83D\uDCCB"),
     MAKE_AN_ANNOUNCEMENT("Зробити оголошення \uD83D\uDCE3"),
+    CHECK_RECEIPTS("Перевірка чеків 🔍"),
 
     // User commands
     USER_SHOW_PROMOTIONS("Актуальні акції \uD83D\uDC8A"),
