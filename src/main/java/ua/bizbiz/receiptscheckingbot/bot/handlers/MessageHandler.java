@@ -244,8 +244,6 @@ public class MessageHandler {
                         .chat(chat)
                         .phoneNumber(existingUser.getPhoneNumber())
                         .registeredAt(new Timestamp(System.currentTimeMillis()))
-                        .soldPackages(0)
-                        .score(0)
                         .role(existingUser.getRole())
                         .fullName(existingUser.getFullName())
                         .address(existingUser.getAddress())
@@ -299,8 +297,6 @@ public class MessageHandler {
                 .cityOfPharmacy(cityOfPharmacy)
                 .phoneNumber(phoneNumber)
                 .role(Role.USER)
-                .soldPackages(0)
-                .score(0)
                 .secretCode(secretCode)
                 .build());
 
@@ -372,8 +368,16 @@ public class MessageHandler {
                             "⚠️ У вас ще немає жодної підписки.\nСпочатку підпишіться хоча б на одну акцію."));
                 }
             }
-            case BALANCE -> processableCommands.add(
-                    new StartCommand(chat.getUser().getRole(), "На жаль, на даний момент команда недоступна."));
+            case BALANCE -> {
+                List<Subscription> subscriptions = subscriptionRepository.findAllByUserId(chat.getUser().getId());
+                if (subscriptions.size() != 0) {
+                    processableCommands.add(new BalanceCommand(subscriptions));
+                    processableCommands.add(new HomeCommand(chat.getUser().getRole()));
+                } else {
+                    processableCommands.add(new StartCommand(chat.getUser().getRole(),
+                            "⚠️ У вас ще немає жодної підписки.\nСпочатку підпишіться хоча б на одну акцію."));
+                }
+            }
         }
         assert !processableCommands.isEmpty();
         return processableCommands.stream()

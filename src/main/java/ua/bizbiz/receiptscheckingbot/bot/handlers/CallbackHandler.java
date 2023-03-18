@@ -24,6 +24,7 @@ import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -101,7 +102,9 @@ public class CallbackHandler {
         List<Validable> responses = new ArrayList<>();
 
         Long subscriptionId = Long.parseLong(callbackData[0]);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         LocalDateTime photoCreationTime = LocalDateTime.parse(callbackData[2]);
+        String photoCreationTimeText = dtf.format(photoCreationTime);
         Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
         if (subscription.isPresent()) {
             String action = callbackData[1];
@@ -119,14 +122,14 @@ public class CallbackHandler {
                     responses.add(SendMessage.builder()
                             .chatId(existingSubscription.getUser().getChat().getChatId())
                             .text(String.format("✅ Ваш чек [%s, %d шт., станом на %s] було підтверджено.",
-                                    existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTime))
+                                    existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
                             .build());
                 }
                 case "❌ Відхилити" -> {
                     responses.add(SendMessage.builder()
                             .chatId(existingSubscription.getUser().getChat().getChatId())
                             .text(String.format("❌ Ваш чек [%s, %d шт., станом на %s] було відхилено.",
-                                    existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTime))
+                                    existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
                             .build());
 
                 }

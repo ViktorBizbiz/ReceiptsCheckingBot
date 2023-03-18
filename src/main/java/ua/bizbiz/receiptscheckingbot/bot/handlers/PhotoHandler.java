@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.HomeCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.StartCommand;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
@@ -22,6 +23,7 @@ import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -54,6 +56,15 @@ public class PhotoHandler {
         String subscriptionId = dataHolder.getSubscriptionId();
 
         String drugsQuantity = message.getCaption();
+        if (drugsQuantity == null) {
+            responses.add(new StartCommand(chat.getUser().getRole(),
+                    """
+                            ⚠️ Ви не написали під фото кількість препаратів(в штуках), яку ви хочете підтвердити цим фото.
+                            Фото не було відправлено.
+                            Спробуйте ще раз.
+                            """).process(chat));
+            return responses;
+        }
         String senderPromotionName = "";
         String senderUserFullName = "";
         Optional<Subscription> subscription = subscriptionRepository.findById(Long.parseLong(subscriptionId));
@@ -65,13 +76,15 @@ public class PhotoHandler {
         String caption = String.format("""
                 Від: %s
                 Назва акції: %s
-                Кількіть препарату для підтвердження: %s шт.
+                Кількість препарату для підтвердження: %s шт.
                 
                 ‼️ Зверніть увагу!
                 Щоб підтвердити/відхилити чек, перейдіть у режим "Перевірка чеків 🔍" у головному меню.
                 """, senderUserFullName, senderPromotionName, drugsQuantity);
 
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
+        String nowText = dtf.format(now);
 
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         String callbackAccept = subscriptionId + "\n✅ Підтвердити\n" + now + "\n" + drugsQuantity;
@@ -93,7 +106,7 @@ public class PhotoHandler {
         }
         responses.add(SendMessage.builder()
                 .text(String.format("♻️ Фото чеку [%s, %s шт., станом на %s] відправлено в обробку.",
-                        senderPromotionName, drugsQuantity, now))
+                        senderPromotionName, drugsQuantity, nowText))
                 .chatId(chat.getChatId())
                 .build());
         responses.add(new HomeCommand(chat.getUser().getRole()).process(chat));

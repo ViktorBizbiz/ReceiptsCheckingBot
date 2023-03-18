@@ -31,12 +31,6 @@ public class User {
     @Column(name = "registered_at")
     Timestamp registeredAt;
 
-    @Column(name = "sold_packages")
-    Integer soldPackages;
-
-    @Column(name = "score")
-    Integer score;
-
     @Enumerated(value = EnumType.STRING)
     @Column(name = "role")
     Role role;

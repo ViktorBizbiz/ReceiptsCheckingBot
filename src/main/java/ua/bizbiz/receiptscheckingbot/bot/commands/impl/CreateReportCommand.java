@@ -73,9 +73,9 @@ public class CreateReportCommand implements ProcessableCommand {
             dataCell = dataRow.createCell(6);
             dataCell.setCellValue(user.getPhoneNumber());
             dataCell = dataRow.createCell(7);
-            dataCell.setCellValue(user.getSoldPackages());
+            dataCell.setCellValue("");
             dataCell = dataRow.createCell(8);
-            dataCell.setCellValue(user.getScore());
+            dataCell.setCellValue("");
             i++;
         }
 
