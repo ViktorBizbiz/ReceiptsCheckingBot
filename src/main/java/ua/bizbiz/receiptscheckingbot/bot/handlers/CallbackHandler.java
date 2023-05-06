@@ -74,6 +74,7 @@ public class CallbackHandler {
                         User user = chat.getUser();
                         subscriptionRepository.save(Subscription.builder()
                                 .currentQuantity(0)
+                                .currentBonus(0)
                                 .promotion(promotion.get())
                                 .user(user)
                                 .build());
@@ -112,12 +113,20 @@ public class CallbackHandler {
             int drugQuantity = Integer.parseInt(callbackData[3]);
             switch (action) {
                 case "✅ Підтвердити" -> {
-                    int newQuantity = existingSubscription.getCurrentQuantity() + drugQuantity;
+                    var newQuantity = existingSubscription.getCurrentQuantity() + drugQuantity;
+                    var minQuantity = existingSubscription.getPromotion().getMinQuantity();
+                    var resaleBonus = existingSubscription.getPromotion().getResaleBonus();
+                    int subscriptionBonus = 0;
+
+                    if (newQuantity >= minQuantity)
+                        subscriptionBonus = newQuantity * resaleBonus;
+
                     subscriptionRepository.save(Subscription.builder()
                             .id(existingSubscription.getId())
                             .user(existingSubscription.getUser())
                             .promotion(existingSubscription.getPromotion())
                             .currentQuantity(newQuantity)
+                            .currentBonus(subscriptionBonus)
                             .build());
                     responses.add(SendMessage.builder()
                             .chatId(existingSubscription.getUser().getChat().getChatId())

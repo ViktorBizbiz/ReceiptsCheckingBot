@@ -28,4 +28,7 @@ public class Subscription {
 
     @Column(name = "current_quantity")
     Integer currentQuantity;
+
+    @Column(name = "current_bonus")
+    Integer currentBonus;
 }

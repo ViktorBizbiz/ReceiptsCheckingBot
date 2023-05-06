@@ -22,16 +22,12 @@ public class BalanceCommand implements ProcessableCommand {
     public BalanceCommand(List<Subscription> subscriptions) {
         StringBuilder response = new StringBuilder();
         int totalBonus = 0;
-        int subscriptionBonus = 0;
         response.append("За вашими підписками у вас наступні результати:\n\n");
         for (Subscription sub : subscriptions) {
             var promotionName = sub.getPromotion().getName();
             var currentQuantity = sub.getCurrentQuantity();
+            var subscriptionBonus = sub.getCurrentBonus();
             var minQuantity = sub.getPromotion().getMinQuantity();
-            var resaleBonus = sub.getPromotion().getResaleBonus();
-
-            if (currentQuantity >= minQuantity)
-                subscriptionBonus = currentQuantity * resaleBonus;
 
             response.append(String.format("""
                     %s

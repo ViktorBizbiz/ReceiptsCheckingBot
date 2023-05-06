@@ -19,7 +19,10 @@ import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -63,7 +66,6 @@ public class MessageHandler {
             }
             case CREATING_PROMOTION, UPDATING_PROMOTION, DELETING_PROMOTION ->
                 responses.addAll(processPromotion(text, chat));
-//            case GETTING_REPORT -> ;
         }
 
         chatRepository.save(chat);
@@ -274,6 +276,7 @@ public class MessageHandler {
     }
 
     private List<Validable> processUserDataAdding(String text, Chat chat) {
+        //TODO
         String fullName = text.substring(text.indexOf(" ") + 1,
                 text.indexOf("\nАдреса: "));
         String address = text.substring(text.indexOf("\nАдреса: ") + "\nАдреса: ".length(),
@@ -321,22 +324,22 @@ public class MessageHandler {
     private List<Validable> processCommand(MainCommandType command, Chat chat) {
         List<ProcessableCommand> processableCommands = new ArrayList<>();
         switch (command) {
+            //TODO
             case ADD_NEW_USER -> processableCommands.add(new AddUserCommand(ChatStatus.CREATING_NEW_USER));
             case CREATE_REPORT -> {
-                Optional<List<User>> reportData = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
-                if (reportData.isPresent() && reportData.get().size() != 0) {
-                    processableCommands.add(new CreateReportCommand(reportData.get()));
+                List<Subscription> reportData = subscriptionRepository.findAll();
+                List<Promotion> promotions = promotionRepository.findAll();
+                if (reportData.size() != 0 && promotions.size() != 0) {
+                    processableCommands.add(new CreateReportCommand(reportData, promotions));
                     processableCommands.add(new HomeCommand(chat.getUser().getRole()));
                 } else {
                     processableCommands.add(new StartCommand(chat.getUser().getRole(),
                             """
-                                    Ще немає жодного користувача, або він ще не авторизувався у боті.
-                                    Спочатку додайте хоча б одного та переконайтеся, що він авторизований.
+                                    Жоден користувач ще не має жодної підписки на акцію.
 
                                     Чим ще я можу допомогти вам?"""));
                 }
             }
-            //TODO change commands
             case ADMIN_SHOW_PROMOTIONS -> {
                 List<Promotion> promotions = promotionRepository.findAll();
                 if (promotions.size() != 0) {
