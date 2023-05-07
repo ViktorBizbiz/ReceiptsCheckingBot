@@ -50,7 +50,7 @@ public class User {
     @Column(name = "secret_code")
     Long secretCode;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     List<Subscription> subscriptions;
 }
 

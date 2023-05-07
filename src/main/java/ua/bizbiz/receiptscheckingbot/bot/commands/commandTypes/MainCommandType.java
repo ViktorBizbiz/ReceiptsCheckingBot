@@ -10,9 +10,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public enum MainCommandType {
     // Admin commands
-    ADD_NEW_USER("Додати нового користувача \uD83D\uDC64"),
+    ADMIN_SHOW_USERS("Користувачі \uD83D\uDC65"),
     CREATE_REPORT("Створити звіт \uD83D\uDCC1"),
-    ADMIN_SHOW_PROMOTIONS("Показати акції \uD83D\uDCCB"),
+    ADMIN_SHOW_PROMOTIONS("Акції \uD83D\uDCCB"),
     MAKE_AN_ANNOUNCEMENT("Зробити оголошення \uD83D\uDCE3"),
     CHECK_RECEIPTS("Перевірка чеків 🔍"),
 

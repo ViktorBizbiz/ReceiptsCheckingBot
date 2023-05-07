@@ -14,9 +14,11 @@ insert into users (id, full_name, role, chat_id, secret_code) values (3, 'Біз
 -- insert into users (id, full_name, role, chat_id, secret_code) values (4, 'Єгорін Михайло', 'ADMIN', 4, 111111);
 -- insert into users (id, full_name, role, chat_id, secret_code) values (5, 'Захарченко Олександр', 'ADMIN', 5, 222222);
 
-insert into subscriptions (id, current_bonus, current_quantity, promotion_id, user_id) values (1, 0, 0, 3, 3);
+insert into subscriptions (id, current_bonus, current_quantity, promotion_id, user_id) values (1, 0, 0, 1, 3);
+insert into subscriptions (id, current_bonus, current_quantity, promotion_id, user_id) values (2, 0, 0, 2, 3);
+insert into subscriptions (id, current_bonus, current_quantity, promotion_id, user_id) values (3, 0, 0, 3, 3);
 
 alter sequence chats_seq restart with 55;
 alter sequence promotions_seq restart with 53;
 alter sequence users_seq restart with 55;
-alter sequence subscriptions_seq restart with 51;
+alter sequence subscriptions_seq restart with 53;

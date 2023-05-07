@@ -6,10 +6,7 @@ import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.AnnouncementCommandType;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.MainCommandType;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.PromotionCrudCommandType;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.*;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.*;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
@@ -19,10 +16,7 @@ import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -45,7 +39,13 @@ public class MessageHandler {
             return responses;
 
         switch (chat.getStatus()) {
-            case CREATING_NEW_USER -> responses.addAll(processUserDataAdding(text, chat));
+            case ADMIN_GETTING_USERS -> {
+                Optional<UserCrudCommandType> command = UserCrudCommandType.parse(text);
+                command.ifPresent(userCrudCommandType ->
+                        responses.addAll(processCommand(userCrudCommandType, chat)));
+            }
+            case CREATING_USER, READING_USER, UPDATING_USER, DELETING_USER ->
+                responses.addAll(processUser(text, chat));
             case ENTERING_SECRET_CODE -> responses.addAll(processSecretCode(text, chat, messageId));
             case AUTHORIZED_AS_ADMIN, AUTHORIZED_AS_USER -> {
                 Optional<MainCommandType> command = MainCommandType.parse(text);
@@ -72,10 +72,12 @@ public class MessageHandler {
         return responses;
     }
 
+
     private List<Validable> processPromotion(String text, Chat chat) {
         List<Validable> responses = new ArrayList<>();
         String[] splittedText = text.split("\n");
         switch (chat.getStatus()) {
+            //TODO: Скрыть реализацию в отдельных классах(придумать как)
             case CREATING_PROMOTION -> {
                 String name = splittedText[0];
                 int minQuantity = Integer.parseInt(splittedText[1]);
@@ -139,6 +141,20 @@ public class MessageHandler {
             }
         }
         return responses;
+    }
+
+    private List<Validable> processCommand(UserCrudCommandType command, Chat chat) {
+        List<ProcessableCommand> processableCommands = new ArrayList<>();
+        switch (command) {
+            case CREATE_USER -> processableCommands.add(new CreateUserCommand());
+            case READ_USER -> processableCommands.add(new ReadUserCommand());
+            case UPDATE_USER -> processableCommands.add(new UpdateUserCommand());
+            case DELETE_USER -> processableCommands.add(new DeleteUserCommand());
+        }
+        assert !processableCommands.isEmpty();
+        return processableCommands.stream()
+                .map(com -> com.process(chat))
+                .toList();
     }
 
     private List<Validable> processCommand(PromotionCrudCommandType command, Chat chat) {
@@ -275,37 +291,138 @@ public class MessageHandler {
         return responses;
     }
 
-    private List<Validable> processUserDataAdding(String text, Chat chat) {
-        //TODO
-        String fullName = text.substring(text.indexOf(" ") + 1,
-                text.indexOf("\nАдреса: "));
-        String address = text.substring(text.indexOf("\nАдреса: ") + "\nАдреса: ".length(),
-                text.indexOf("\nМережа: "));
-        String pharmacyChain = text.substring(text.indexOf("\nМережа: ") + "\nМережа: ".length(),
-                text.indexOf("\nМісто аптеки: "));
-        String cityOfPharmacy = text.substring(text.indexOf("\nМісто аптеки: ") + "\nМісто аптеки: ".length(),
-                text.indexOf("\nТелефон: "));
-        String phoneNumber = text.substring(text.indexOf("\nТелефон: ") + "\nТелефон: ".length());
+    private List<Validable> processUser(String text, Chat chat) {
+        //TODO: Скрыть реализацию в отдельных классах(придумать как)
+        List<Validable> responses = new ArrayList<>();
+        String[] splittedText = text.split("\n");
+        switch (chat.getStatus()) {
+            case CREATING_USER -> {
+                String fullName = splittedText[0];
+                String address = splittedText[1];
+                String pharmacyChain = splittedText[2];
+                String cityOfPharmacy = splittedText[3];
+                String phoneNumber = splittedText[4];
 
-        Long secretCode = null;
-        int min = 100_000;
-        while (userRepository.existsBySecretCode(secretCode) || secretCode == null || secretCode < min)
-            secretCode = (long) (Math.random() * 1_000_000);
+                Long secretCode = null;
+                int min = 100_000;
+                while (userRepository.existsBySecretCode(secretCode) || secretCode == null || secretCode < min)
+                    secretCode = (long) (Math.random() * 1_000_000);
 
+                userRepository.save(User.builder()
+                        .fullName(fullName)
+                        .address(address)
+                        .pharmacyChain(pharmacyChain)
+                        .cityOfPharmacy(cityOfPharmacy)
+                        .phoneNumber(phoneNumber)
+                        .role(Role.USER)
+                        .secretCode(secretCode)
+                        .build());
 
-        userRepository.save(User.builder()
-                .fullName(fullName)
-                .address(address)
-                .pharmacyChain(pharmacyChain)
-                .cityOfPharmacy(cityOfPharmacy)
-                .phoneNumber(phoneNumber)
-                .role(Role.USER)
-                .secretCode(secretCode)
-                .build());
-
-        return Collections.singletonList(
-                new StartCommand(chat.getUser().getRole(), "✅ Новий користувач був створений.\n\n" +
-                        "\uD83D\uDD10 Перешліть йому цей код доступу: " + secretCode).process(chat));
+                responses.add(new StartCommand(chat.getUser().getRole(),
+                        String.format("""
+                                ✅ Новий користувач був створений.
+                                \uD83D\uDD10 Перешліть йому цей код доступу: %d
+                                """, secretCode)).process(chat));
+            }
+            case READING_USER -> {
+                long id = Long.parseLong(text);
+                Optional<User> optional = userRepository.findById(id);
+                if (optional.isPresent()) {
+                    User user = optional.get();
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            String.format("""
+                                    ID: %s
+                                    ПІП: %s
+                                    Адреса аптеки: %s
+                                    Назва мережі аптек: %s
+                                    Назва міста аптеки: %s
+                                    Номер телефону: %s
+                                            
+                                    Чим ще я можу допомогти вам?""",
+                                    user.getId(),
+                                    user.getFullName(),
+                                    user.getAddress(),
+                                    user.getPharmacyChain(),
+                                    user.getCityOfPharmacy(),
+                                    user.getPhoneNumber()
+                                    )).process(chat));
+                } else {
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    ⚠️ За даним ID користувачів не існує.
+                                            
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                }
+            }
+            case UPDATING_USER -> {
+                long id = Long.parseLong(splittedText[0]);
+                String fullName = splittedText[1];
+                String address = splittedText[2];
+                String pharmacyChain = splittedText[3];
+                String cityOfPharmacy = splittedText[4];
+                String phoneNumber = splittedText[5];
+                Optional<User> optional = userRepository.findById(id);
+                if (optional.isPresent()) {
+                    User oldUser = optional.get();
+                    userRepository.save(User.builder()
+                            .id(oldUser.getId())
+                            .chat(oldUser.getChat())
+                            .phoneNumber(phoneNumber)
+                            .registeredAt(oldUser.getRegisteredAt())
+                            .role(oldUser.getRole())
+                            .fullName(fullName)
+                            .address(address)
+                            .pharmacyChain(pharmacyChain)
+                            .cityOfPharmacy(cityOfPharmacy)
+                            .secretCode(oldUser.getSecretCode())
+                            .build());
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    ✅ Користувача успішно змінено.
+    
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                } else {
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    ⚠️ За даним ID користувачів не існує.
+                                            
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                }
+            }
+            case DELETING_USER -> {
+                long id = Long.parseLong(text);
+                Optional<User> optional = userRepository.findById(id);
+                if (optional.isPresent()) {
+                    User user = optional.get();
+                    Chat userChat = user.getChat();
+                    //TODO: Упростить
+                    if (
+                            userChat == null ||
+                            !userChat.getChatId().equals(chat.getChatId())
+                    ) {
+                        userRepository.deleteById(id);
+                        responses.add(new StartCommand(chat.getUser().getRole(),
+                                """
+                                        ✅ Користувача успішно видалено.
+                                                
+                                        Чим ще я можу допомогти вам?""").process(chat));
+                    } else {
+                        responses.add(new StartCommand(chat.getUser().getRole(),
+                                """
+                                        ⚠️ Ви не можете видалити себе.
+        
+                                        Чим ще я можу допомогти вам?""").process(chat));
+                    }
+                } else {
+                    responses.add(new StartCommand(chat.getUser().getRole(),
+                            """
+                                    ⚠️ За даним ID користувачів не існує.
+                                            
+                                    Чим ще я можу допомогти вам?""").process(chat));
+                }
+            }
+        }
+        return responses;
     }
 
     private List<Validable> tryProcessHomeCommand(String text, Chat chat) {
@@ -324,8 +441,14 @@ public class MessageHandler {
     private List<Validable> processCommand(MainCommandType command, Chat chat) {
         List<ProcessableCommand> processableCommands = new ArrayList<>();
         switch (command) {
-            //TODO
-            case ADD_NEW_USER -> processableCommands.add(new AddUserCommand(ChatStatus.CREATING_NEW_USER));
+            case ADMIN_SHOW_USERS -> {
+                List<User> users = userRepository.findAll();
+                if (users.size() != 0) {
+                    processableCommands.add(new AdminShowUsersCommand(users));
+                } else {
+                    throw new RuntimeException("Something went wrong [users.size() == 0]");
+                }
+            }
             case CREATE_REPORT -> {
                 List<Subscription> reportData = subscriptionRepository.findAll();
                 List<Promotion> promotions = promotionRepository.findAll();
