@@ -13,6 +13,7 @@ import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
+import ua.bizbiz.receiptscheckingbot.util.ClientAnswerMessages;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 
 import java.sql.Timestamp;
@@ -90,10 +91,7 @@ public class MessageHandler {
                         .resaleBonus(resaleBonus)
                         .build());
                 responses.add(new StartCommand(chat.getUser().getRole(),
-                        """
-                                ✅ Акцію успішно створено.
-
-                                Чим ще я можу допомогти вам?""").process(chat));
+                        ClientAnswerMessages.PROMOTION_CREATED_SUCCESSFULLY).process(chat));
             }
             case UPDATING_PROMOTION -> {
                 long id = Long.parseLong(splittedText[0]);
@@ -110,16 +108,10 @@ public class MessageHandler {
                             .resaleBonus(resaleBonus)
                             .build());
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                        """
-                                ✅ Акцію успішно змінено.
-
-                                Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.PROMOTION_UPDATED_SUCCESSFULLY).process(chat));
                 } else {
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                        """
-                                ⚠️ За даним ID акцій не існує.
-                                        
-                                Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.NO_PROMOTION_FOUND_BY_ID).process(chat));
                 }
             }
             case DELETING_PROMOTION -> {
@@ -127,16 +119,10 @@ public class MessageHandler {
                 if (promotionRepository.existsById(id)) {
                     promotionRepository.deleteById(id);
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    ✅ Акцію успішно видалено.
-    
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.PROMOTION_DELETED_SUCCESSFULLY).process(chat));
                 } else {
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    ⚠️ За даним ID акцій не існує.
-                                            
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.NO_PROMOTION_FOUND_BY_ID).process(chat));
                 }
             }
         }
@@ -183,14 +169,10 @@ public class MessageHandler {
                                 .build());
                     }
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            "✅ Повідомлення було відправлено усім.").process(chat));
+                            ClientAnswerMessages.MESSAGE_SENT_SUCCESSFULLY).process(chat));
                 } else {
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    Ще немає жодного користувача, або він ще не авторизувався у боті.
-                                    Спочатку додайте хоча б одного та переконайтеся, що він авторизований.
-
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.NO_AUTHORIZED_USER_FOUND).process(chat));
                 }
             }
             case SENDING_ANNOUNCEMENT_TO_PERSON -> {
@@ -203,13 +185,10 @@ public class MessageHandler {
                             .text("[Від: " + chat.getUser().getFullName() + "]\n" + text)
                             .build());
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            "✅ Повідомлення було відправлено.").process(chat));
+                            ClientAnswerMessages.MESSAGE_SENT_SUCCESSFULLY).process(chat));
                 } else {
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    За таким ID користувачів не існує.
-
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.NO_USER_FOUND_BY_ID).process(chat));
                 }
             }
         }
@@ -226,20 +205,11 @@ public class MessageHandler {
                     for (User user : users.get()) {
                         userList.append(user.getId()).append(". ").append(user.getFullName()).append("\n");
                     }
-                    userList.append("""
-
-                            Введіть ID користувача, якому ви хочете відправити повідомлення та саме повідомлення за наступним шаблоном:
-                            ID
-                            ваше_повідомлення
-                            """);
+                    userList.append(ClientAnswerMessages.ID_AND_TEXT_MESSAGE_REQUEST);
                     processableCommands.add(new MakeAnnouncementToPersonCommand(userList.toString()));
                 } else {
                     processableCommands.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    Ще немає жодного користувача, або він ще не авторизувався у боті.
-                                    Спочатку додайте хоча б одного та переконайтеся, що він авторизований.
-
-                                    Чим ще я можу допомогти вам?"""));
+                            ClientAnswerMessages.NO_AUTHORIZED_USER_FOUND));
                 }
             }
             case TO_ALL -> processableCommands.add(new MakeAnnouncementToAllCommand());
@@ -273,7 +243,7 @@ public class MessageHandler {
                 if (!existingUser.getChat().getChatId().equals(chat.getChatId())) {
                     responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
                     responses.add(new DefaultStartCommand(
-                            "⚠️ Невірний код. \nАвторизація не пройдена. Спробуйте ще раз.").process(chat));
+                            ClientAnswerMessages.WRONG_AUTHORIZATION_CODE).process(chat));
                     return responses;
                 }
             }
@@ -282,11 +252,11 @@ public class MessageHandler {
 
             responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
             responses.add(new StartCommand(chatWithUser.getUser().getRole(),
-                    "✅ Авторизація пройшла успішно.").process(chat));
+                    ClientAnswerMessages.SUCCESSFUL_AUTHORIZATION).process(chat));
         } else {
             responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
             responses.add(new DefaultStartCommand(
-                    "⚠️ Невірний код. \nАвторизація не пройдена. Спробуйте ще раз.").process(chat));
+                    ClientAnswerMessages.WRONG_AUTHORIZATION_CODE).process(chat));
         }
         return responses;
     }
@@ -319,10 +289,7 @@ public class MessageHandler {
                         .build());
 
                 responses.add(new StartCommand(chat.getUser().getRole(),
-                        String.format("""
-                                ✅ Новий користувач був створений.
-                                \uD83D\uDD10 Перешліть йому цей код доступу: %d
-                                """, secretCode)).process(chat));
+                        String.format(ClientAnswerMessages.USER_CREATED_SUCCESSFULLY, secretCode)).process(chat));
             }
             case READING_USER -> {
                 long id = Long.parseLong(text);
@@ -330,15 +297,7 @@ public class MessageHandler {
                 if (optional.isPresent()) {
                     User user = optional.get();
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            String.format("""
-                                    ID: %s
-                                    ПІП: %s
-                                    Адреса аптеки: %s
-                                    Назва мережі аптек: %s
-                                    Назва міста аптеки: %s
-                                    Номер телефону: %s
-                                            
-                                    Чим ще я можу допомогти вам?""",
+                            String.format(ClientAnswerMessages.USER_PROFILE_DATA,
                                     user.getId(),
                                     user.getFullName(),
                                     user.getAddress(),
@@ -348,10 +307,7 @@ public class MessageHandler {
                                     )).process(chat));
                 } else {
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    ⚠️ За даним ID користувачів не існує.
-                                            
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.NO_USER_FOUND_BY_ID).process(chat));
                 }
             }
             case UPDATING_USER -> {
@@ -377,16 +333,10 @@ public class MessageHandler {
                             .secretCode(oldUser.getSecretCode())
                             .build());
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    ✅ Користувача успішно змінено.
-    
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.USER_UPDATED_SUCCESSFULLY).process(chat));
                 } else {
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    ⚠️ За даним ID користувачів не існує.
-                                            
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.NO_USER_FOUND_BY_ID).process(chat));
                 }
             }
             case DELETING_USER -> {
@@ -402,23 +352,14 @@ public class MessageHandler {
                     ) {
                         userRepository.deleteById(id);
                         responses.add(new StartCommand(chat.getUser().getRole(),
-                                """
-                                        ✅ Користувача успішно видалено.
-                                                
-                                        Чим ще я можу допомогти вам?""").process(chat));
+                                ClientAnswerMessages.USER_DELETED_SUCCESSFULLY).process(chat));
                     } else {
                         responses.add(new StartCommand(chat.getUser().getRole(),
-                                """
-                                        ⚠️ Ви не можете видалити себе.
-        
-                                        Чим ще я можу допомогти вам?""").process(chat));
+                                ClientAnswerMessages.CANNOT_DELETE_YOURSELF).process(chat));
                     }
                 } else {
                     responses.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    ⚠️ За даним ID користувачів не існує.
-                                            
-                                    Чим ще я можу допомогти вам?""").process(chat));
+                            ClientAnswerMessages.NO_USER_FOUND_BY_ID).process(chat));
                 }
             }
         }
@@ -457,10 +398,7 @@ public class MessageHandler {
                     processableCommands.add(new HomeCommand(chat.getUser().getRole()));
                 } else {
                     processableCommands.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    Жоден користувач ще не має жодної підписки на акцію.
-
-                                    Чим ще я можу допомогти вам?"""));
+                            ClientAnswerMessages.NO_SUBSCRIPTION_FOUND_2));
                 }
             }
             case ADMIN_SHOW_PROMOTIONS -> {
@@ -479,10 +417,7 @@ public class MessageHandler {
                     processableCommands.add(new UserShowPromotionsCommand(promotions, chat));
                 } else {
                     processableCommands.add(new StartCommand(chat.getUser().getRole(),
-                            """
-                                    Ще немає жодної акції.
-
-                                    Чим ще я можу допомогти вам?"""));
+                            ClientAnswerMessages.NO_PROMOTION_FOUND));
                 }
             }
             case SEND_RECEIPT -> {
@@ -491,7 +426,7 @@ public class MessageHandler {
                     processableCommands.add(new SendReceiptCommand(subscriptions));
                 } else {
                     processableCommands.add(new StartCommand(chat.getUser().getRole(),
-                            "⚠️ У вас ще немає жодної підписки.\nСпочатку підпишіться хоча б на одну акцію."));
+                            ClientAnswerMessages.NO_SUBSCRIPTION_FOUND_1));
                 }
             }
             case BALANCE -> {
@@ -501,7 +436,7 @@ public class MessageHandler {
                     processableCommands.add(new HomeCommand(chat.getUser().getRole()));
                 } else {
                     processableCommands.add(new StartCommand(chat.getUser().getRole(),
-                            "⚠️ У вас ще немає жодної підписки.\nСпочатку підпишіться хоча б на одну акцію."));
+                            ClientAnswerMessages.NO_SUBSCRIPTION_FOUND_1));
                 }
             }
         }
