@@ -162,12 +162,8 @@ public class MessageHandler {
         switch (chat.getStatus()) {
             case SENDING_ANNOUNCEMENT_TO_ALL -> {
                 if (users.isPresent() && users.get().size() != 0) {
-                    for (User user : users.get()) {
-                        responses.add(SendMessage.builder()
-                                .chatId(user.getChat().getChatId())
-                                .text("[Від: " + chat.getUser().getFullName() + "]\n" + text)
-                                .build());
-                    }
+                    for (User user : users.get())
+                        responses.add(getSendMessage(text, chat, user));
                     responses.add(new StartCommand(chat.getUser().getRole(),
                             ClientAnswerMessages.MESSAGE_SENT_SUCCESSFULLY).process(chat));
                 } else {
@@ -180,10 +176,7 @@ public class MessageHandler {
                 text = text.substring(text.indexOf("\n"));
                 Optional<User> user = userRepository.findById(Long.parseLong(userId));
                 if (user.isPresent()) {
-                    responses.add(SendMessage.builder()
-                            .chatId(user.get().getChat().getChatId())
-                            .text("[Від: " + chat.getUser().getFullName() + "]\n" + text)
-                            .build());
+                    responses.add(getSendMessage(text, chat, user.get()));
                     responses.add(new StartCommand(chat.getUser().getRole(),
                             ClientAnswerMessages.MESSAGE_SENT_SUCCESSFULLY).process(chat));
                 } else {
@@ -193,6 +186,13 @@ public class MessageHandler {
             }
         }
         return responses;
+    }
+
+    private static SendMessage getSendMessage(String text, Chat chat, User user) {
+        return SendMessage.builder()
+                .chatId(user.getChat().getChatId())
+                .text("[Від: " + chat.getUser().getFullName() + "]\n" + text)
+                .build();
     }
 
     private List<Validable> processCommand(AnnouncementCommandType command, Chat chat) {
