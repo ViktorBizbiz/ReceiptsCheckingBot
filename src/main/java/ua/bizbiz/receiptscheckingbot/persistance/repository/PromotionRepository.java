@@ -6,9 +6,4 @@ import ua.bizbiz.receiptscheckingbot.persistance.entity.Promotion;
 
 @Repository
 public interface PromotionRepository extends JpaRepository<Promotion, Long> {
-
-    boolean existsById(Long id);
-
-
-
 }

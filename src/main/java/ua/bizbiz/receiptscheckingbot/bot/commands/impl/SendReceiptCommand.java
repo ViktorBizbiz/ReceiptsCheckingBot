@@ -3,6 +3,7 @@ package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
@@ -16,14 +17,14 @@ import java.util.List;
 public class SendReceiptCommand implements ProcessableCommand {
 
     private final String responseMessageText;
-    private final InlineKeyboardMarkup inlineKeyboard;
+    private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
         return SendMessage.builder()
                 .text(responseMessageText)
-                .replyMarkup(inlineKeyboard)
+                .replyMarkup(keyboard)
                 .chatId(chat.getChatId())
                 .build();
     }
@@ -44,6 +45,6 @@ public class SendReceiptCommand implements ProcessableCommand {
                 .text(HomeCommandType.HOME.getName())
                 .callbackData(HomeCommandType.HOME.getName())
                 .build()));
-        inlineKeyboard = InlineKeyboardMarkup.builder().keyboard(buttons).build();
+        keyboard = InlineKeyboardMarkup.builder().keyboard(buttons).build();
     }
 }

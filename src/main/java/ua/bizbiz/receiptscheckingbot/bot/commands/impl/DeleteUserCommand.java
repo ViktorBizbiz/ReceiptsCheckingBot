@@ -10,12 +10,11 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class AddUserCommand implements ProcessableCommand {
+public class DeleteUserCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
-
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
@@ -26,19 +25,11 @@ public class AddUserCommand implements ProcessableCommand {
                 .build();
     }
 
-    public AddUserCommand(ChatStatus chatStatus) {
-        this.chatStatus = chatStatus;
-        responseMessageText = """
-                ✍️ Введіть дані користувача за наступним шаблоном:
-                "ПІП: Іванов Іван Іванович"
-                "Адреса: адреса_аптеки"
-                "Мережа: назва_мережі_аптек"
-                "Місто аптеки: назва_міста"
-                "Телефон: 0995553535"
-                
-                ❗️ Вводьте дані уважно!
-                Вони будуть відображатися у звітах у такому ж вигляді.
-                """;
+    public DeleteUserCommand() {
+
+        responseMessageText = "✍️ Введіть ID користувача, якого хочете видалити.";
+
+        chatStatus = ChatStatus.DELETING_USER;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());

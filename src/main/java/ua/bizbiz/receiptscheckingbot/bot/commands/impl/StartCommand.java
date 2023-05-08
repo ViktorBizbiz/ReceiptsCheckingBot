@@ -37,7 +37,7 @@ public class StartCommand implements ProcessableCommand {
             row1.add(MainCommandType.CREATE_REPORT.getName());
 
             KeyboardRow row2 = new KeyboardRow();
-            row2.add(MainCommandType.ADD_NEW_USER.getName());
+            row2.add(MainCommandType.ADMIN_SHOW_USERS.getName());
             row2.add(MainCommandType.MAKE_AN_ANNOUNCEMENT.getName());
 
             KeyboardRow row3 = new KeyboardRow();
