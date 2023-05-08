@@ -2,6 +2,7 @@ package ua.bizbiz.receiptscheckingbot.bot;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
@@ -16,6 +17,7 @@ import ua.bizbiz.receiptscheckingbot.bot.handlers.CallbackHandler;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.MessageHandler;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.PhotoHandler;
 import ua.bizbiz.receiptscheckingbot.config.BotConfig;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
@@ -87,5 +89,19 @@ public class TelegramBot extends TelegramLongPollingBot {
         photoMessages.add(new PhotoMessageData(messageId, chatId, photoCreationTime));
 
         dataHolder.setPhotoMessages(photoMessages);
+    }
+
+    @SneakyThrows
+    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "0 0 16 * * *")
+    private void sendMotivationText() {
+        var users = userRepository.findAll();
+        for (User user : users) {
+            String motivation = "\uD83D\uDE00 Motivation \uD83D\uDE00";
+            execute(SendMessage.builder()
+                    .text(motivation)
+                    .chatId(user.getChat().getChatId())
+                    .build());
+        }
     }
 }
