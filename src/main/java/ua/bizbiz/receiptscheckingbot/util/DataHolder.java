@@ -12,6 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 public class DataHolder {
+    //TODO: Изменить реализацию на обращение к БД
     private String subscriptionId;
 
     private List<PhotoMessageData> photoMessages = new ArrayList<>();

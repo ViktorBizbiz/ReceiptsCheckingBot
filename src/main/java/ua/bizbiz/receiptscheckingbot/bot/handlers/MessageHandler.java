@@ -7,7 +7,17 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.*;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.crud.PromotionCrudCommandType;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.crud.UserCrudCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.*;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement.MakeAnnouncementCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement.MakeAnnouncementToAllCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement.MakeAnnouncementToPersonCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.DefaultStartCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion.*;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.user.*;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
@@ -40,31 +50,19 @@ public class MessageHandler {
             return responses;
 
         switch (chat.getStatus()) {
-            case ADMIN_GETTING_USERS -> {
-                Optional<UserCrudCommandType> command = UserCrudCommandType.parse(text);
-                command.ifPresent(userCrudCommandType ->
-                        responses.addAll(processCommand(userCrudCommandType, chat)));
-            }
+            case ADMIN_GETTING_USERS -> UserCrudCommandType.parse(text).ifPresent(command ->
+                        responses.addAll(processCommand(command, chat)));
             case CREATING_USER, READING_USER, UPDATING_USER, DELETING_USER ->
-                responses.addAll(processUser(text, chat));
+                    responses.addAll(processUser(text, chat));
             case ENTERING_SECRET_CODE -> responses.addAll(processSecretCode(text, chat, messageId));
-            case AUTHORIZED_AS_ADMIN, AUTHORIZED_AS_USER -> {
-                Optional<MainCommandType> command = MainCommandType.parse(text);
-                command.ifPresent(mainCommandType ->
-                        responses.addAll(processCommand(mainCommandType, chat)));
-            }
-            case SENDING_ANNOUNCEMENT -> {
-                Optional<AnnouncementCommandType> command = AnnouncementCommandType.parse(text);
-                command.ifPresent(announcementCommandType ->
-                        responses.addAll(processCommand(announcementCommandType, chat)));
-            }
+            case AUTHORIZED_AS_ADMIN, AUTHORIZED_AS_USER -> MainCommandType.parse(text).ifPresent(command ->
+                        responses.addAll(processCommand(command, chat)));
+            case SENDING_ANNOUNCEMENT -> AnnouncementCommandType.parse(text).ifPresent(command ->
+                        responses.addAll(processCommand(command, chat)));
             case SENDING_ANNOUNCEMENT_TO_ALL, SENDING_ANNOUNCEMENT_TO_PERSON ->
                 responses.addAll(processAnnouncement(text, chat));
-            case ADMIN_GETTING_PROMOTIONS -> {
-                Optional<PromotionCrudCommandType> command = PromotionCrudCommandType.parse(text);
-                command.ifPresent(promotionCrudCommandType ->
-                        responses.addAll(processCommand(promotionCrudCommandType, chat)));
-            }
+            case ADMIN_GETTING_PROMOTIONS -> PromotionCrudCommandType.parse(text).ifPresent(command ->
+                        responses.addAll(processCommand(command, chat)));
             case CREATING_PROMOTION, UPDATING_PROMOTION, DELETING_PROMOTION ->
                 responses.addAll(processPromotion(text, chat));
         }
@@ -368,14 +366,11 @@ public class MessageHandler {
 
     private List<Validable> tryProcessHomeCommand(String text, Chat chat) {
         List<Validable> responses = new ArrayList<>();
-        if (isTelegramCommand(text)) {
+        if (isTelegramCommand(text))
             text = text.substring(TELEGRAM_COMMAND_PREFIX.length());
-        }
-        Optional<HomeCommandType> command = HomeCommandType.parse(text);
-        if (command.isPresent()) {
-            responses = processCommand(command.get(), chat);
-            chatRepository.save(chat);
-        }
+        HomeCommandType.parse(text).ifPresent(command -> responses.addAll(processCommand(command, chat)));
+
+        chatRepository.save(chat);
         return responses;
     }
 

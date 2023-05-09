@@ -13,12 +13,12 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
-import ua.bizbiz.receiptscheckingbot.bot.commands.impl.HomeCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
-import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
+import ua.bizbiz.receiptscheckingbot.util.ClientAnswerMessages;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
@@ -35,7 +35,6 @@ public class CallbackHandler {
 
     private final ChatRepository chatRepository;
     private final PromotionRepository promotionRepository;
-    private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final DataHolder dataHolder;
     public List<Validable> handle(Update update) {
@@ -130,14 +129,14 @@ public class CallbackHandler {
                             .build());
                     responses.add(SendMessage.builder()
                             .chatId(existingSubscription.getUser().getChat().getChatId())
-                            .text(String.format("✅ Ваш чек [%s, %d шт., станом на %s] було підтверджено.",
+                            .text(String.format(ClientAnswerMessages.RECEIPT_ACCEPTED,
                                     existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
                             .build());
                 }
                 case "❌ Відхилити" -> {
                     responses.add(SendMessage.builder()
                             .chatId(existingSubscription.getUser().getChat().getChatId())
-                            .text(String.format("❌ Ваш чек [%s, %d шт., станом на %s] було відхилено.",
+                            .text(String.format(ClientAnswerMessages.RECEIPT_DECLINED,
                                     existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
                             .build());
 
@@ -173,11 +172,7 @@ public class CallbackHandler {
                 .resizeKeyboard(true)
                 .build();
 
-        String responseMessageText = """
-                Чекаю на ваше фото.
-                ‼️ Також допишіть разом із фото кількість препаратів(в штуках), яку ви хочете підтвердити цим фото.
-                В іншому випадку вам не зарахується ця кількість препаратів.
-                """;
+        String responseMessageText = ClientAnswerMessages.WAITING_FOR_PHOTO;
 
         responses.add(SendMessage.builder()
                 .text(responseMessageText)

@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.user;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,7 +10,7 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class CreatePromotionCommand implements ProcessableCommand {
+public class ReadUserCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
@@ -25,17 +25,11 @@ public class CreatePromotionCommand implements ProcessableCommand {
                 .build();
     }
 
-    public CreatePromotionCommand() {
+    public ReadUserCommand() {
 
-        responseMessageText = """
-                ✍️ Введіть дані в такому порядку:
-                назва_акції
-                мінімальна_кількість_уп
-                бонус_за_мінімальну_кількість_уп
-                бонус_за_кожну_наступну_уп
-                """;
+        responseMessageText = "✍️ Введіть ID користувача, подробиці якого хочете відкрити.";
 
-        chatStatus = ChatStatus.CREATING_PROMOTION;
+        chatStatus = ChatStatus.READING_USER;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());

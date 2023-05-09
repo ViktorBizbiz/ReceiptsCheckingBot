@@ -1,7 +1,9 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -10,7 +12,7 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class UpdateUserCommand implements ProcessableCommand {
+public class DeletePromotionCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
@@ -25,22 +27,11 @@ public class UpdateUserCommand implements ProcessableCommand {
                 .build();
     }
 
-    public UpdateUserCommand() {
+    public DeletePromotionCommand() {
 
-        responseMessageText = """
-                ✍️ Введіть ID користувача, якого хочете змінити, та нові дані в такому порядку:
-                ID користувача
-                ПІП
-                адреса_аптеки
-                назва_мережі_аптек
-                назва_міста_аптеки
-                номер_телефону
-                
-                ❗️ Вводьте дані уважно!
-                Вони будуть відображатися у звітах у такому ж вигляді.
-                """;
+        responseMessageText = "✍️ Введіть ID акції, яку хочете видалити.";
 
-        chatStatus = ChatStatus.UPDATING_USER;
+        chatStatus = ChatStatus.DELETING_PROMOTION;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());

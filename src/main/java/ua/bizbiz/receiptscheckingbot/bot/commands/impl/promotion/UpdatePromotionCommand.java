@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,7 +10,7 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class DeleteUserCommand implements ProcessableCommand {
+public class UpdatePromotionCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
@@ -25,11 +25,18 @@ public class DeleteUserCommand implements ProcessableCommand {
                 .build();
     }
 
-    public DeleteUserCommand() {
+    public UpdatePromotionCommand() {
 
-        responseMessageText = "✍️ Введіть ID користувача, якого хочете видалити.";
+        responseMessageText = """
+                ✍️ Введіть ID акції, яку хочете змінити, та нові дані в такому порядку:
+                ID акції
+                нова_назва_акції
+                нова_мінімальна_кількість_уп
+                новий_бонус_за_мінімальну_кількість_уп
+                новий_бонус_за_кожну_наступну_уп
+                """;
 
-        chatStatus = ChatStatus.DELETING_USER;
+        chatStatus = ChatStatus.UPDATING_PROMOTION;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());

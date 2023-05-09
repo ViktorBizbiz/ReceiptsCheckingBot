@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.user;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,10 +10,12 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class MakeAnnouncementToAllCommand implements ProcessableCommand {
+public class CreateUserCommand implements ProcessableCommand {
+
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
+
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
@@ -24,10 +26,20 @@ public class MakeAnnouncementToAllCommand implements ProcessableCommand {
                 .build();
     }
 
-    public MakeAnnouncementToAllCommand() {
-        responseMessageText = "✍️ Введіть повідомлення.";
+    public CreateUserCommand() {
+        responseMessageText = """
+                ✍️ Введіть дані користувача за наступним шаблоном:
+                ПІП
+                адреса_аптеки
+                назва_мережі_аптек
+                назва_міста_аптеки
+                номер_телефону
+                
+                ❗️ Вводьте дані уважно!
+                Вони будуть відображатися у звітах у такому ж вигляді.
+                """;
 
-        this.chatStatus = ChatStatus.SENDING_ANNOUNCEMENT_TO_ALL;
+        chatStatus = ChatStatus.CREATING_USER;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());

@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,12 +10,11 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class CreateUserCommand implements ProcessableCommand {
+public class CreatePromotionCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
-
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
@@ -26,20 +25,17 @@ public class CreateUserCommand implements ProcessableCommand {
                 .build();
     }
 
-    public CreateUserCommand() {
+    public CreatePromotionCommand() {
+
         responseMessageText = """
-                ✍️ Введіть дані користувача за наступним шаблоном:
-                ПІП
-                адреса_аптеки
-                назва_мережі_аптек
-                назва_міста_аптеки
-                номер_телефону
-                
-                ❗️ Вводьте дані уважно!
-                Вони будуть відображатися у звітах у такому ж вигляді.
+                ✍️ Введіть дані в такому порядку:
+                назва_акції
+                мінімальна_кількість_уп
+                бонус_за_мінімальну_кількість_уп
+                бонус_за_кожну_наступну_уп
                 """;
 
-        chatStatus = ChatStatus.CREATING_USER;
+        chatStatus = ChatStatus.CREATING_PROMOTION;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());

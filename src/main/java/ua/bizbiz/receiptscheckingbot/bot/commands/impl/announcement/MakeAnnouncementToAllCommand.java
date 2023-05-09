@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,8 +10,7 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class ReadUserCommand implements ProcessableCommand {
-
+public class MakeAnnouncementToAllCommand implements ProcessableCommand {
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
@@ -25,11 +24,10 @@ public class ReadUserCommand implements ProcessableCommand {
                 .build();
     }
 
-    public ReadUserCommand() {
+    public MakeAnnouncementToAllCommand() {
+        responseMessageText = "✍️ Введіть повідомлення.";
 
-        responseMessageText = "✍️ Введіть ID користувача, подробиці якого хочете відкрити.";
-
-        chatStatus = ChatStatus.READING_USER;
+        this.chatStatus = ChatStatus.SENDING_ANNOUNCEMENT_TO_ALL;
 
         KeyboardRow row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());

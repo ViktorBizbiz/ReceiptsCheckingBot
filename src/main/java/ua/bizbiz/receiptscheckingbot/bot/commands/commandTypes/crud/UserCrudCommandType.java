@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes;
+package ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.crud;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

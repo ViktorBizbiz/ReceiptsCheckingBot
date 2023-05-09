@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.user;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -6,12 +6,16 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.AnnouncementCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.crud.UserCrudCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 
-public class MakeAnnouncementCommand implements ProcessableCommand {
+import java.util.List;
+
+public class AdminShowUsersCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
@@ -26,16 +30,30 @@ public class MakeAnnouncementCommand implements ProcessableCommand {
                 .build();
     }
 
-    public MakeAnnouncementCommand() {
-        responseMessageText = "Кому треба відправити повідомлення?";
+    public AdminShowUsersCommand(List<User> users) {
+        StringBuilder usersList = new StringBuilder();
+        for (User user : users) {
+            usersList.append(String.format("%d. %s", user.getId(), user.getFullName()));
+            if (user.getChat() != null) {
+                if (user.getRole() == Role.ADMIN) {
+                    usersList.append(" (Адмін)");
+                }
+                usersList.append("\n");
+            } else {
+                usersList.append(" (Не активовано)\n");
+            }
+        }
+        responseMessageText = usersList.toString();
 
-        chatStatus = ChatStatus.SENDING_ANNOUNCEMENT;
+        chatStatus = ChatStatus.ADMIN_GETTING_USERS;
 
         KeyboardRow row1 = new KeyboardRow();
-        row1.add(AnnouncementCommandType.TO_ALL.getName());
+        row1.add(UserCrudCommandType.CREATE_USER.getName());
+        row1.add(UserCrudCommandType.UPDATE_USER.getName());
 
         KeyboardRow row2 = new KeyboardRow();
-        row2.add(AnnouncementCommandType.TO_PERSON.getName());
+        row2.add(UserCrudCommandType.DELETE_USER.getName());
+        row2.add(UserCrudCommandType.READ_USER.getName());
 
         KeyboardRow row3 = new KeyboardRow();
         row3.add(HomeCommandType.HOME.getName());
