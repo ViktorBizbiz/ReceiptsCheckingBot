@@ -2,7 +2,6 @@ package ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 
 public class HomeCommand extends StartCommand {
 
@@ -11,7 +10,7 @@ public class HomeCommand extends StartCommand {
         return super.process(chat);
     }
 
-    public HomeCommand(Role role) {
-        super(role, "Чим ще я можу допомогти вам?");
+    public HomeCommand(Chat chat) {
+        super(chat, "Чим ще я можу допомогти вам?");
     }
 }

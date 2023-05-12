@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.*;
+
 public class UserShowPromotionsCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -42,7 +44,7 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
                             """, promotion.getName(), promotion.getMinQuantity(),
                     promotion.getCompletionBonus(), promotion.getResaleBonus()));
         }
-        promotionsList.append("\uD83D\uDC47\uD83C\uDFFB Оберіть нижче, на яку акцію ви хочете підписатися/відписатися.\n\n");
+        promotionsList.append(POINT_DOWN_EMOJI + "Оберіть нижче, на яку акцію ви хочете підписатися/відписатися.\n\n");
         promotionsList.append("❗️❗️❗️ Зверніть увагу! Якщо ви відпишетеся від акції, то втратите увесь прогрес по ній.");
         responseMessageText = promotionsList.toString();
 
@@ -51,11 +53,11 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         int i = 0;
         for (Promotion promotion : promotions) {
-            String buttonName = "\uD83D\uDC49\uD83C\uDFFB " + promotion.getName();
+            String buttonName = POINT_RIGHT_EMOJI + promotion.getName();
 
             if (chat.getUser().getSubscriptions().stream()
                     .anyMatch(sub -> Objects.equals(sub.getPromotion().getId(), promotion.getId())))
-                buttonName = "✅ " + promotion.getName();
+                buttonName = CHECK_MARK_EMOJI + promotion.getName();
 
             buttons.add(List.of(InlineKeyboardButton.builder()
                     .text(buttonName)

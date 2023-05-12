@@ -5,20 +5,18 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
-import ua.bizbiz.receiptscheckingbot.util.ClientAnswerMessages;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
@@ -29,6 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.CHECK_MARK_EMOJI;
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.POINT_RIGHT_EMOJI;
+
 @Component
 @RequiredArgsConstructor
 public class CallbackHandler {
@@ -38,58 +40,18 @@ public class CallbackHandler {
     private final SubscriptionRepository subscriptionRepository;
     private final DataHolder dataHolder;
     public List<Validable> handle(Update update) {
-        CallbackQuery callbackQuery = update.getCallbackQuery();
-        String[] callbackData = callbackQuery.getData().split("\n");
-        Message msg = callbackQuery.getMessage();
-        int messageId = msg.getMessageId();
+        final var callbackQuery = update.getCallbackQuery();
+        final var callbackData = callbackQuery.getData().split("\n");
+        final var message = callbackQuery.getMessage();
+        final var messageId = message.getMessageId();
+        final var chat = chatRepository.findByChatId(callbackQuery.getMessage().getChatId());
 
-        Chat chat = chatRepository.findByChatId(callbackQuery.getMessage().getChatId());
-
-        List<Validable> responses = new ArrayList<>();
+        final List<Validable> responses = tryProcessHomeCommand(callbackData, messageId, chat);
+        if (responses.size() != 0)
+            return responses;
 
         switch (chat.getStatus()) {
-            case USER_GETTING_PROMOTIONS -> {
-
-                if (callbackData[0].equalsIgnoreCase(HomeCommandType.HOME.getName())) {
-                    responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
-                    responses.add(new HomeCommand(chat.getUser().getRole()).process(chat));
-                    chatRepository.save(chat);
-                    return responses;
-                }
-
-                InlineKeyboardMarkup keyboard = msg.getReplyMarkup();
-                int buttonId = Integer.parseInt(callbackData[0]);
-                var button = keyboard.getKeyboard().get(buttonId);
-
-                Optional<Promotion> promotion = promotionRepository.findById(Long.parseLong(callbackData[1]));
-                if (button.get(0).getText().equalsIgnoreCase("\uD83D\uDC49\uD83C\uDFFB " + callbackData[2])) {
-                    if (promotion.isPresent()) {
-                        button.get(0).setText("✅ " + callbackData[2]);
-                        responses = List.of(EditMessageReplyMarkup.builder()
-                                .replyMarkup(keyboard)
-                                .messageId(msg.getMessageId())
-                                .chatId(chat.getChatId())
-                                .build());
-                        User user = chat.getUser();
-                        subscriptionRepository.save(Subscription.builder()
-                                .currentQuantity(0)
-                                .currentBonus(0)
-                                .promotion(promotion.get())
-                                .user(user)
-                                .build());
-                    }
-                } else {
-                    if (promotion.isPresent()) {
-                        button.get(0).setText("\uD83D\uDC49\uD83C\uDFFB " + callbackData[2]);
-                        responses = List.of(EditMessageReplyMarkup.builder()
-                                .replyMarkup(keyboard)
-                                .messageId(msg.getMessageId())
-                                .chatId(chat.getChatId())
-                                .build());
-                        subscriptionRepository.deleteByPromotionId(promotion.get().getId());
-                    }
-                }
-            }
+            case USER_GETTING_PROMOTIONS -> responses.addAll(processUserSubscriptions(callbackData, message, chat));
             case SENDING_RECEIPT -> responses.addAll(processChosenSubscription(callbackData[0], chat, messageId));
             case CHECKING_RECEIPTS -> responses.addAll(processCheckReceipt(callbackData, chat, messageId));
         }
@@ -98,53 +60,98 @@ public class CallbackHandler {
         return responses;
     }
 
-    private List<Validable> processCheckReceipt(String[] callbackData, Chat chat, int messageId) {
-        List<Validable> responses = new ArrayList<>();
+    private List<Validable> tryProcessHomeCommand(String[] callbackData, int messageId, Chat chat) {
+        final List<Validable> responses = new ArrayList<>();
+        final var text = callbackData[0];
+        if (text.equalsIgnoreCase(HomeCommandType.HOME.getName())) {
+            responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
+            responses.add(new HomeCommand(chat).process(chat));
+            chatRepository.save(chat);
+        }
+        return responses;
+    }
 
-        Long subscriptionId = Long.parseLong(callbackData[0]);
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-        LocalDateTime photoCreationTime = LocalDateTime.parse(callbackData[2]);
-        String photoCreationTimeText = dtf.format(photoCreationTime);
-        Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
-        if (subscription.isPresent()) {
-            String action = callbackData[1];
-            Subscription existingSubscription = subscription.get();
-            int drugQuantity = Integer.parseInt(callbackData[3]);
+    private List<Validable> processUserSubscriptions(String[] callbackData, Message msg, Chat chat) {
+        final List<Validable> responses = new ArrayList<>();
+        final var keyboard = msg.getReplyMarkup();
+        final var buttonId = Integer.parseInt(callbackData[0]);
+        final var button = keyboard.getKeyboard().get(buttonId).get(0);
+        final var promotionId = Long.parseLong(callbackData[1]);
+        final var promotionName = callbackData[2];
+
+        final var promotion = promotionRepository.findById(promotionId);
+        if (promotion.isEmpty()) {
+            responses.add(new StartCommand(chat, SOMETHING_WENT_WRONG).process(chat));
+            return responses;
+        }
+        if (!button.getText().equals(POINT_RIGHT_EMOJI + promotionName)) {
+            button.setText(POINT_RIGHT_EMOJI + promotionName);
+            responses.add(EditMessageReplyMarkup.builder()
+                    .replyMarkup(keyboard)
+                    .messageId(msg.getMessageId())
+                    .chatId(chat.getChatId())
+                    .build());
+            subscriptionRepository.deleteByPromotionIdAndUserId(promotionId, chat.getUser().getId());
+//            subscriptionRepository.deleteById(6L);
+            return responses;
+        }
+        button.setText(CHECK_MARK_EMOJI + promotionName);
+        responses.add(EditMessageReplyMarkup.builder()
+                .replyMarkup(keyboard)
+                .messageId(msg.getMessageId())
+                .chatId(chat.getChatId())
+                .build());
+        subscriptionRepository.save(Subscription.builder()
+                .currentQuantity(0)
+                .currentBonus(0)
+                .promotion(promotion.get())
+                .user(chat.getUser())
+                .build());
+        return responses;
+    }
+
+    private List<Validable> processCheckReceipt(String[] callbackData, Chat chat, int messageId) {
+        final List<Validable> responses = new ArrayList<>();
+
+        final var subscriptionId = Long.parseLong(callbackData[0]);
+        final var dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        final var photoCreationTime = LocalDateTime.parse(callbackData[2]);
+        final var photoCreationTimeText = dtf.format(photoCreationTime);
+        final var optionalSubscription = subscriptionRepository.findById(subscriptionId);
+        if (optionalSubscription.isPresent()) {
+            final var action = callbackData[1];
+            final var subscription = optionalSubscription.get();
+            final var drugQuantity = Integer.parseInt(callbackData[3]);
             switch (action) {
-                case "✅ Підтвердити" -> {
-                    var newQuantity = existingSubscription.getCurrentQuantity() + drugQuantity;
-                    var minQuantity = existingSubscription.getPromotion().getMinQuantity();
-                    var resaleBonus = existingSubscription.getPromotion().getResaleBonus();
-                    int subscriptionBonus = 0;
+                case ACCEPT -> {
+                    final var newQuantity = subscription.getCurrentQuantity() + drugQuantity;
+                    final var minQuantity = subscription.getPromotion().getMinQuantity();
+                    final var resaleBonus = subscription.getPromotion().getResaleBonus();
+                    var subscriptionBonus = 0;
 
                     if (newQuantity >= minQuantity)
                         subscriptionBonus = newQuantity * resaleBonus;
 
-                    subscriptionRepository.save(Subscription.builder()
-                            .id(existingSubscription.getId())
-                            .user(existingSubscription.getUser())
-                            .promotion(existingSubscription.getPromotion())
-                            .currentQuantity(newQuantity)
-                            .currentBonus(subscriptionBonus)
-                            .build());
-                    responses.add(SendMessage.builder()
-                            .chatId(existingSubscription.getUser().getChat().getChatId())
-                            .text(String.format(ClientAnswerMessages.RECEIPT_ACCEPTED,
-                                    existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
-                            .build());
-                }
-                case "❌ Відхилити" -> {
-                    responses.add(SendMessage.builder()
-                            .chatId(existingSubscription.getUser().getChat().getChatId())
-                            .text(String.format(ClientAnswerMessages.RECEIPT_DECLINED,
-                                    existingSubscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
-                            .build());
+                    subscription.setCurrentQuantity(newQuantity);
+                    subscription.setCurrentBonus(subscriptionBonus);
+                    subscriptionRepository.save(subscription);
 
+                    responses.add(SendMessage.builder()
+                            .chatId(subscription.getUser().getChat().getChatId())
+                            .text(String.format(RECEIPT_ACCEPTED,
+                                    subscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
+                            .build());
                 }
+                case CANCEL ->
+                    responses.add(SendMessage.builder()
+                            .chatId(subscription.getUser().getChat().getChatId())
+                            .text(String.format(RECEIPT_DECLINED,
+                                    subscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
+                            .build());
             }
         }
-        List<PhotoMessageData> photos = dataHolder.getPhotoMessages();
-        List<PhotoMessageData> deletedPhotos = new ArrayList<>();
+        final var photos = dataHolder.getPhotoMessages();
+        final List<PhotoMessageData> deletedPhotos = new ArrayList<>();
 
         for (PhotoMessageData photo : photos) {
             if (photo.getCreationTime().isEqual(photoCreationTime)) {
@@ -161,21 +168,19 @@ public class CallbackHandler {
 
     private List<Validable> processChosenSubscription(String subscriptionId, Chat chat, int messageId) {
         chat.setStatus(ChatStatus.SENDING_RECEIPT_PHOTO);
-        List<Validable> responses = new ArrayList<>();
+        final List<Validable> responses = new ArrayList<>();
         dataHolder.setSubscriptionId(subscriptionId);
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
-        ReplyKeyboard keyboard = ReplyKeyboardMarkup.builder()
+        final var keyboard = ReplyKeyboardMarkup.builder()
                 .keyboardRow(row1)
                 .resizeKeyboard(true)
                 .build();
 
-        String responseMessageText = ClientAnswerMessages.WAITING_FOR_PHOTO;
-
         responses.add(SendMessage.builder()
-                .text(responseMessageText)
+                .text(WAITING_FOR_PHOTO)
                 .chatId(chat.getChatId())
                 .replyMarkup(keyboard)
                 .build());

@@ -16,11 +16,9 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
-import ua.bizbiz.receiptscheckingbot.util.ClientAnswerMessages;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 
 import java.time.LocalDateTime;
@@ -28,6 +26,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
 
 @Component
 @RequiredArgsConstructor
@@ -39,68 +39,59 @@ public class PhotoHandler {
     private final DataHolder dataHolder;
 
     public List<Validable> handle(Update update) {
-        Chat chat = chatRepository.findByChatId(update.getMessage().getChatId());
-
-        List<Validable> responses = new ArrayList<>();
+        final var chat = chatRepository.findByChatId(update.getMessage().getChatId());
+        final List<Validable> responses = new ArrayList<>();
 
         switch (chat.getStatus()) {
             case SENDING_RECEIPT_PHOTO -> responses.addAll(processPhotoReceipt(update.getMessage(), chat));
         }
-
         chatRepository.save(chat);
         return responses;
     }
 
     private List<Validable> processPhotoReceipt(Message message, Chat chat) {
-        List<Validable> responses = new ArrayList<>();
-        String fileId = message.getPhoto().get(0).getFileId();
-        String subscriptionId = dataHolder.getSubscriptionId();
+        final List<Validable> responses = new ArrayList<>();
+        final var fileId = message.getPhoto().get(0).getFileId();
+        final var subscriptionId = dataHolder.getSubscriptionId();
+        final var drugsQuantity = message.getCaption();
 
-        String drugsQuantity = message.getCaption();
         if (drugsQuantity == null) {
-            responses.add(new StartCommand(chat.getUser().getRole(),
-                    ClientAnswerMessages.FORGOT_ABOUT_DRUGS_QUANTITY).process(chat));
+            responses.add(new StartCommand(chat, FORGOT_ABOUT_DRUGS_QUANTITY).process(chat));
             return responses;
         }
-        String senderPromotionName = "";
-        String senderUserFullName = "";
-        Optional<Subscription> subscription = subscriptionRepository.findById(Long.parseLong(subscriptionId));
+        var senderPromotionName = "";
+        var senderUserFullName = "";
+        final var subscription = subscriptionRepository.findById(Long.parseLong(subscriptionId));
         if (subscription.isPresent()) {
             senderPromotionName = subscription.get().getPromotion().getName();
             senderUserFullName = subscription.get().getUser().getFullName();
         }
 
-        String caption = String.format(ClientAnswerMessages.RECEIPT_INFO,
-                senderUserFullName, senderPromotionName, drugsQuantity);
+        final var caption = String.format(RECEIPT_INFO, senderUserFullName, senderPromotionName, drugsQuantity);
 
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        String nowText = dtf.format(now);
+        final var dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        final var now = LocalDateTime.now();
+        final var nowText = dtf.format(now);
 
-        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
-        String callbackAccept = subscriptionId + "\n✅ Підтвердити\n" + now + "\n" + drugsQuantity;
-        String callbackCancel = subscriptionId + "\n❌ Відхилити\n" + now + "\n" + drugsQuantity;
-        buttons.add(getInlineButton("✅ Підтвердити", callbackAccept));
-        buttons.add(getInlineButton("❌ Відхилити", callbackCancel));
-        ReplyKeyboard keyboard = InlineKeyboardMarkup.builder().keyboard(buttons).build();
+        final List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        final var callbackAccept = subscriptionId + "\n" + ACCEPT + "\n" + now + "\n" + drugsQuantity;
+        final var callbackCancel = subscriptionId + "\n" + CANCEL + "\n" + now + "\n" + drugsQuantity;
+        buttons.add(getInlineButton(ACCEPT, callbackAccept));
+        buttons.add(getInlineButton(CANCEL, callbackCancel));
+        final var keyboard = InlineKeyboardMarkup.builder().keyboard(buttons).build();
 
-        Optional<List<User>> admins = userRepository.findAllByRoleAndChatIsNotNull(Role.ADMIN);
-        if (admins.isPresent() && admins.get().size() != 0) {
-            for (User admin : admins.get()) {
-                responses.add(SendPhoto.builder()
+        userRepository.findAllByRoleAndChatIsNotNull(Role.ADMIN).ifPresent(admins ->
+                admins.forEach(admin -> responses.add(SendPhoto.builder()
                         .photo(new InputFile(fileId))
                         .chatId(admin.getChat().getChatId())
                         .caption(caption)
                         .replyMarkup(keyboard)
-                        .build());
-            }
-        }
+                        .build())));
         responses.add(SendMessage.builder()
-                .text(String.format(ClientAnswerMessages.PHOTO_IN_PROCESSING,
-                        senderPromotionName, drugsQuantity, nowText))
+                .text(String.format(PHOTO_IN_PROCESSING, senderPromotionName, drugsQuantity, nowText))
                 .chatId(chat.getChatId())
                 .build());
-        responses.add(new HomeCommand(chat.getUser().getRole()).process(chat));
+        responses.add(new HomeCommand(chat).process(chat));
 
         dataHolder.setPhotoCreationTime(now);
         // clean DataHolder

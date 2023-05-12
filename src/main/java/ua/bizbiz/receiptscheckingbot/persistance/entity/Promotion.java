@@ -30,6 +30,4 @@ public class Promotion {
     @Column(name = "resale_bonus")
     Integer resaleBonus;
 
-    @OneToOne(mappedBy = "promotion")
-    Subscription subscription;
 }

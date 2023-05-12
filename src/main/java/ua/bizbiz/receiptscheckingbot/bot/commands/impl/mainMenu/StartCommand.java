@@ -27,8 +27,9 @@ public class StartCommand implements ProcessableCommand {
                 .build();
     }
 
-    public StartCommand(Role role, String responseMessageText) {
+    public StartCommand(Chat chat, String responseMessageText) {
         this.responseMessageText = responseMessageText;
+        Role role = chat.getUser().getRole();
         if (role == Role.ADMIN) {
             chatStatus = ChatStatus.AUTHORIZED_AS_ADMIN;
 

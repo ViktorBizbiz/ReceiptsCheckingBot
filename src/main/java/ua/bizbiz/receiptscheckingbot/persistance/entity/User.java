@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
@@ -29,7 +30,7 @@ public class User {
     String phoneNumber;
 
     @Column(name = "registered_at")
-    Timestamp registeredAt;
+    LocalDateTime registeredAt;
 
     @Enumerated(value = EnumType.STRING)
     @Column(name = "role")
