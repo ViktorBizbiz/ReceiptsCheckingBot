@@ -13,13 +13,6 @@ import java.util.List;
 @Repository
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
     @Transactional
-    @Modifying
-    @Query(
-            value = "DELETE FROM subscriptions WHERE promotion_id = :promotionId AND user_id = :userId",
-            nativeQuery = true
-    )
-    void deleteByPromotionIdAndUserId(@Param("promotionId") Long promotionId,
-                                      @Param("userId") Long userId);
-
+    void deleteByPromotionIdAndUserId(Long promotionId, Long userId);
     List<Subscription> findAllByUserId(Long userId);
 }

@@ -18,11 +18,11 @@ public class Subscription {
     @Column(name = "id")
     Long id;
 
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     User user;
 
-    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id", referencedColumnName = "id")
     Promotion promotion;
 

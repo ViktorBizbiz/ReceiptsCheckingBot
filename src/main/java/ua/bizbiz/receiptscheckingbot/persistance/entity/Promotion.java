@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Builder
 @Data
 @NoArgsConstructor
@@ -30,4 +33,8 @@ public class Promotion {
     @Column(name = "resale_bonus")
     Integer resaleBonus;
 
+    @OneToMany(cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER,
+            mappedBy = "promotion")
+    List<Subscription> subscriptions = new ArrayList<>();
 }
