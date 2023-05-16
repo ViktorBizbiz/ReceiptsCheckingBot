@@ -14,6 +14,9 @@ import ua.bizbiz.receiptscheckingbot.persistance.entity.Promotion;
 
 import java.util.List;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.NO_PROMOTION_FOUND_2;
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.PROMOTION_INFO;
+
 public class AdminShowPromotionsCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -30,31 +33,24 @@ public class AdminShowPromotionsCommand implements ProcessableCommand {
     }
 
     public AdminShowPromotionsCommand(List<Promotion> promotions) {
-        StringBuilder promotionsList = new StringBuilder();
+        final var promotionsList = new StringBuilder();
         for (Promotion promotion : promotions) {
-            promotionsList.append(String.format("""
-                            %d. %s
-                            Мінімальна кількість: %d уп.
-                            Бонус за мінімальну кількість: %d грн.
-                            Бонус за кожну наступну упаковку: %d грн.
-                            
-                            """, promotion.getId(), promotion.getName(), promotion.getMinQuantity(),
-                            promotion.getCompletionBonus(), promotion.getResaleBonus()));
+            promotionsList.append(String.format(PROMOTION_INFO,
+                    promotion.getId(), promotion.getName(), promotion.getMinQuantity(),
+                    promotion.getCompletionBonus(), promotion.getResaleBonus()));
         }
         responseMessageText = promotionsList.toString();
 
         chatStatus = ChatStatus.ADMIN_GETTING_PROMOTIONS;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
+        final var row2 = new KeyboardRow();
+        final var row3 = new KeyboardRow();
+        final var row4 = new KeyboardRow();
+
         row1.add(PromotionCrudCommandType.CREATE_PROMOTION.getName());
-
-        KeyboardRow row2 = new KeyboardRow();
         row2.add(PromotionCrudCommandType.UPDATE_PROMOTION.getName());
-
-        KeyboardRow row3 = new KeyboardRow();
         row3.add(PromotionCrudCommandType.DELETE_PROMOTION.getName());
-
-        KeyboardRow row4 = new KeyboardRow();
         row4.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()
@@ -67,17 +63,14 @@ public class AdminShowPromotionsCommand implements ProcessableCommand {
     }
 
     public AdminShowPromotionsCommand() {
-        responseMessageText = """
-                            Ще немає жодної акції.
-                            Спочатку додайте хоча б одну.
-                            """;
+        responseMessageText = NO_PROMOTION_FOUND_2;
 
         chatStatus = ChatStatus.ADMIN_GETTING_PROMOTIONS;
 
-        KeyboardRow row1 = new KeyboardRow();
-        row1.add(PromotionCrudCommandType.CREATE_PROMOTION.getName());
+        final var row1 = new KeyboardRow();
+        final var row2 = new KeyboardRow();
 
-        KeyboardRow row2 = new KeyboardRow();
+        row1.add(PromotionCrudCommandType.CREATE_PROMOTION.getName());
         row2.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

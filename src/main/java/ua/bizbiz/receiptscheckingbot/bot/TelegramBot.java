@@ -17,6 +17,7 @@ import ua.bizbiz.receiptscheckingbot.bot.handlers.CallbackHandler;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.MessageHandler;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.PhotoHandler;
 import ua.bizbiz.receiptscheckingbot.config.BotConfig;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
@@ -92,16 +93,17 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     @SneakyThrows
-    @Scheduled(cron = "0 0 9 * * *")
-    @Scheduled(cron = "0 0 16 * * *")
+    @Scheduled(cron = "0 0 9,16 * * *")
     private void sendMotivationText() {
-        var users = userRepository.findAll();
-        for (User user : users) {
-            String motivation = "\uD83D\uDE00 Motivation \uD83D\uDE00";
-            execute(SendMessage.builder()
-                    .text(motivation)
-                    .chatId(user.getChat().getChatId())
-                    .build());
+        var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+        if (users.isPresent()) {
+            for (User user : users.get()) {
+                String motivation = "\uD83D\uDE00 Motivation \uD83D\uDE00";
+                execute(SendMessage.builder()
+                        .text(motivation)
+                        .chatId(user.getChat().getChatId())
+                        .build());
+            }
         }
     }
 }

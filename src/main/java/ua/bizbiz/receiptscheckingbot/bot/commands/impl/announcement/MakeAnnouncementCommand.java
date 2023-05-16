@@ -11,6 +11,8 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.WHOM_SEND_MESSAGE;
+
 public class MakeAnnouncementCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -27,17 +29,16 @@ public class MakeAnnouncementCommand implements ProcessableCommand {
     }
 
     public MakeAnnouncementCommand() {
-        responseMessageText = "Кому треба відправити повідомлення?";
+        responseMessageText = WHOM_SEND_MESSAGE;
 
         chatStatus = ChatStatus.SENDING_ANNOUNCEMENT;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
+        final var row2 = new KeyboardRow();
+        final var row3 = new KeyboardRow();
+
         row1.add(AnnouncementCommandType.TO_ALL.getName());
-
-        KeyboardRow row2 = new KeyboardRow();
         row2.add(AnnouncementCommandType.TO_PERSON.getName());
-
-        KeyboardRow row3 = new KeyboardRow();
         row3.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

@@ -3,6 +3,8 @@ package ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.WHAT_ELSE_HELP_YOU_NEED;
+
 public class HomeCommand extends StartCommand {
 
     @Override
@@ -11,6 +13,6 @@ public class HomeCommand extends StartCommand {
     }
 
     public HomeCommand(Chat chat) {
-        super(chat, "Чим ще я можу допомогти вам?");
+        super(chat, WHAT_ELSE_HELP_YOU_NEED);
     }
 }

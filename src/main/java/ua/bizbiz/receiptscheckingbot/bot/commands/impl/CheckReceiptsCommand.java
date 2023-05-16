@@ -10,6 +10,8 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.RECEIPTS_CHECKING_MODE_IS_ENABLED;
+
 public class CheckReceiptsCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -28,13 +30,9 @@ public class CheckReceiptsCommand implements ProcessableCommand {
 
     public CheckReceiptsCommand() {
         chatStatus = ChatStatus.CHECKING_RECEIPTS;
-        responseMessageText = """
-                Ви у режимі перевірки чеків.
-                Зараз ви можете підтверджувати/відхиляти чеки.
-                Щоб вийти з цього режиму, натисніть "◀️ Назад".
-                """;
+        responseMessageText = RECEIPTS_CHECKING_MODE_IS_ENABLED;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

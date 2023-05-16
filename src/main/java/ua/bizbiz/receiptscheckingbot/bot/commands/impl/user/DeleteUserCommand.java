@@ -10,6 +10,8 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ENTER_USER_DATA_TO_DELETE;
+
 public class DeleteUserCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -27,11 +29,11 @@ public class DeleteUserCommand implements ProcessableCommand {
 
     public DeleteUserCommand() {
 
-        responseMessageText = "✍️ Введіть ID користувача, якого хочете видалити.";
+        responseMessageText = ENTER_USER_DATA_TO_DELETE;
 
         chatStatus = ChatStatus.DELETING_USER;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

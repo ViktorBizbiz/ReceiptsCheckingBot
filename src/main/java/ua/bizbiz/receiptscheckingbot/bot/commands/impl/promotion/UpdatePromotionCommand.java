@@ -10,6 +10,8 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ENTER_PROMOTION_ID_AND_NEW_DATA_TO_UPDATE_REQUEST;
+
 public class UpdatePromotionCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -27,18 +29,11 @@ public class UpdatePromotionCommand implements ProcessableCommand {
 
     public UpdatePromotionCommand() {
 
-        responseMessageText = """
-                ✍️ Введіть ID акції, яку хочете змінити, та нові дані в такому порядку:
-                ID акції
-                нова_назва_акції
-                нова_мінімальна_кількість_уп
-                новий_бонус_за_мінімальну_кількість_уп
-                новий_бонус_за_кожну_наступну_уп
-                """;
+        responseMessageText = ENTER_PROMOTION_ID_AND_NEW_DATA_TO_UPDATE_REQUEST;
 
         chatStatus = ChatStatus.UPDATING_PROMOTION;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

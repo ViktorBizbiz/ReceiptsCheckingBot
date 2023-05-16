@@ -10,6 +10,8 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ENTER_USER_DATA_TO_READ;
+
 public class ReadUserCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -27,11 +29,11 @@ public class ReadUserCommand implements ProcessableCommand {
 
     public ReadUserCommand() {
 
-        responseMessageText = "✍️ Введіть ID користувача, подробиці якого хочете відкрити.";
+        responseMessageText = ENTER_USER_DATA_TO_READ;
 
         chatStatus = ChatStatus.READING_USER;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

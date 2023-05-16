@@ -10,11 +10,13 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Promotion;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.*;
 
 public class UserShowPromotionsCommand implements ProcessableCommand {
@@ -33,27 +35,21 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
     }
 
     public UserShowPromotionsCommand(List<Promotion> promotions, Chat chat) {
-        StringBuilder promotionsList = new StringBuilder();
+        final var promotionsList = new StringBuilder();
         for (Promotion promotion : promotions) {
-            promotionsList.append(String.format("""
-                            %s
-                            Мінімальна кількість: %d уп.
-                            Бонус за мінімальну кількість: %d грн.
-                            Бонус за кожну наступну упаковку: %d грн.
-
-                            """, promotion.getName(), promotion.getMinQuantity(),
+            promotionsList.append(String.format(PROMOTION_INFO_2, promotion.getName(), promotion.getMinQuantity(),
                     promotion.getCompletionBonus(), promotion.getResaleBonus()));
         }
-        promotionsList.append(POINT_DOWN_EMOJI + "Оберіть нижче, на яку акцію ви хочете підписатися/відписатися.\n\n");
-        promotionsList.append("❗️❗️❗️ Зверніть увагу! Якщо ви відпишетеся від акції, то втратите увесь прогрес по ній.");
+        promotionsList.append(POINT_DOWN_EMOJI + CHOOSE_PROMOTION);
+        promotionsList.append(LOSE_PROGRESS_WARNING_ON_UNSUBSCRIBE);
         responseMessageText = promotionsList.toString();
 
         chatStatus = ChatStatus.USER_GETTING_PROMOTIONS;
 
-        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
-        int i = 0;
+        final List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        var buttonId = 0;
         for (Promotion promotion : promotions) {
-            String buttonName = POINT_RIGHT_EMOJI + promotion.getName();
+            var buttonName = POINT_RIGHT_EMOJI + promotion.getName();
 
             if (chat.getUser().getSubscriptions().stream()
                     .anyMatch(sub -> Objects.equals(sub.getPromotion().getId(), promotion.getId())))
@@ -61,14 +57,16 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
 
             buttons.add(List.of(InlineKeyboardButton.builder()
                     .text(buttonName)
-                    .callbackData(i + "\n" + promotion.getId().toString() + "\n" + promotion.getName())
+                    .callbackData(buttonId + "\n" + promotion.getId().toString() + "\n" + promotion.getName())
                     .build()));
-            i++;
+            buttonId++;
         }
         buttons.add(List.of(InlineKeyboardButton.builder()
                 .text(HomeCommandType.HOME.getName())
                 .callbackData(HomeCommandType.HOME.getName())
                 .build()));
-        keyboard = InlineKeyboardMarkup.builder().keyboard(buttons).build();
+        keyboard = InlineKeyboardMarkup.builder()
+                .keyboard(buttons)
+                .build();
     }
 }

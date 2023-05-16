@@ -10,6 +10,8 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.TEXT_MESSAGE_REQUEST;
+
 public class MakeAnnouncementToAllCommand implements ProcessableCommand {
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
@@ -25,11 +27,11 @@ public class MakeAnnouncementToAllCommand implements ProcessableCommand {
     }
 
     public MakeAnnouncementToAllCommand() {
-        responseMessageText = "✍️ Введіть повідомлення.";
+        responseMessageText = TEXT_MESSAGE_REQUEST;
 
-        this.chatStatus = ChatStatus.SENDING_ANNOUNCEMENT_TO_ALL;
+        chatStatus = ChatStatus.SENDING_ANNOUNCEMENT_TO_ALL;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

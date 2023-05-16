@@ -10,6 +10,8 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ENTER_PROMOTION_DATA_REQUEST;
+
 public class CreatePromotionCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -27,17 +29,11 @@ public class CreatePromotionCommand implements ProcessableCommand {
 
     public CreatePromotionCommand() {
 
-        responseMessageText = """
-                ✍️ Введіть дані в такому порядку:
-                назва_акції
-                мінімальна_кількість_уп
-                бонус_за_мінімальну_кількість_уп
-                бонус_за_кожну_наступну_уп
-                """;
+        responseMessageText = ENTER_PROMOTION_DATA_REQUEST;
 
         chatStatus = ChatStatus.CREATING_PROMOTION;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

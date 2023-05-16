@@ -7,16 +7,18 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
+import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
@@ -25,7 +27,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.CHECK_MARK_EMOJI;
@@ -36,6 +37,7 @@ import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.POIN
 public class CallbackHandler {
 
     private final ChatRepository chatRepository;
+    private final UserRepository userRepository;
     private final PromotionRepository promotionRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final DataHolder dataHolder;
@@ -53,7 +55,7 @@ public class CallbackHandler {
         switch (chat.getStatus()) {
             case USER_GETTING_PROMOTIONS -> responses.addAll(processUserSubscriptions(callbackData, message, chat));
             case SENDING_RECEIPT -> responses.addAll(processChosenSubscription(callbackData[0], chat, messageId));
-            case CHECKING_RECEIPTS -> responses.addAll(processCheckReceipt(callbackData, chat, messageId));
+            case CHECKING_RECEIPTS -> responses.addAll(processCheckReceipt(callbackData));
         }
 
         chatRepository.save(chat);
@@ -92,7 +94,6 @@ public class CallbackHandler {
                     .chatId(chat.getChatId())
                     .build());
             subscriptionRepository.deleteByPromotionIdAndUserId(promotionId, chat.getUser().getId());
-//            subscriptionRepository.deleteById(6L);
             return responses;
         }
         button.setText(CHECK_MARK_EMOJI + promotionName);
@@ -110,7 +111,7 @@ public class CallbackHandler {
         return responses;
     }
 
-    private List<Validable> processCheckReceipt(String[] callbackData, Chat chat, int messageId) {
+    private List<Validable> processCheckReceipt(String[] callbackData) {
         final List<Validable> responses = new ArrayList<>();
 
         final var subscriptionId = Long.parseLong(callbackData[0]);

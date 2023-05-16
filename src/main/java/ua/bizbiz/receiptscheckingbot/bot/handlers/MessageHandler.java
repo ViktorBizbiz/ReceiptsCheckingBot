@@ -1,5 +1,6 @@
 package ua.bizbiz.receiptscheckingbot.bot.handlers;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,10 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion.*;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.user.*;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.*;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Promotion;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
@@ -34,7 +38,6 @@ import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Command.TELEGRAM_COMMAND_PREFIX;
@@ -196,15 +199,8 @@ public class MessageHandler {
         switch (command) {
             case TO_PERSON -> {
                 final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
-                final var userList = new StringBuilder();
                 if (users.isPresent() && users.get().size() != 0) {
-                    users.get().forEach(user ->
-                            userList.append(user.getId())
-                            .append(". ")
-                            .append(user.getFullName())
-                            .append("\n"));
-                    userList.append(ID_AND_TEXT_MESSAGE_REQUEST);
-                    processableCommands.add(new MakeAnnouncementToPersonCommand(userList.toString()));
+                    processableCommands.add(new MakeAnnouncementToPersonCommand(users.get()));
                 } else {
                     processableCommands.add(new StartCommand(chat, NO_AUTHORIZED_USER_FOUND));
                 }
@@ -236,7 +232,6 @@ public class MessageHandler {
             responses.add(new DefaultStartCommand(WRONG_AUTHORIZATION_CODE).process(chat));
             return responses;
         }
-
         user.setChat(chat);
         chat.setUser(user);
         user.setRegisteredAt(LocalDateTime.now());

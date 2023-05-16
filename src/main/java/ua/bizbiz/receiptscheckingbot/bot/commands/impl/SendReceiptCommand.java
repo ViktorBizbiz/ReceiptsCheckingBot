@@ -14,6 +14,8 @@ import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.CHOOSE_SUBSCRIPTION_TO_SEND_RECEIPT;
+
 public class SendReceiptCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -30,11 +32,11 @@ public class SendReceiptCommand implements ProcessableCommand {
     }
 
     public SendReceiptCommand(List<Subscription> subscriptions) {
-        responseMessageText = "\uD83D\uDC47\uD83C\uDFFB Оберіть нижче, за якою підпискою ви хочете відправити чек.";
+        responseMessageText = CHOOSE_SUBSCRIPTION_TO_SEND_RECEIPT;
 
         chatStatus = ChatStatus.SENDING_RECEIPT;
 
-        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        final List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         for (Subscription subscription : subscriptions) {
             buttons.add(List.of(InlineKeyboardButton.builder()
                     .text(subscription.getPromotion().getName())

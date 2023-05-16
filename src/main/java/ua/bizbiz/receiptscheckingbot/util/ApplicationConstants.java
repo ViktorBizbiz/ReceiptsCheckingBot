@@ -111,5 +111,88 @@ public class ApplicationConstants {
         public static final String ACCEPT = "✅ Підтвердити";
         public static final String CANCEL = "❌ Відхилити";
         public static final String SOMETHING_WENT_WRONG = "\uD83D\uDD34 Щось пішло не так.\n\nЧим ще я можу допомогти вам?";
+        public static final String WHOM_SEND_MESSAGE = "Кому треба відправити повідомлення?";
+        public static final String TEXT_MESSAGE_REQUEST = "✍️ Введіть повідомлення.";
+        public static final String ENTER_AUTHORIZATION_CODE = """
+                Вітаю! Для подальшого користування ботом, пройдіть авторизацію.
+                ✍️ Введіть секретний код доступу.
+                """;
+        public static final String WHAT_ELSE_HELP_YOU_NEED = "Чим ще я можу допомогти вам?";
+        public static final String PROMOTION_INFO = """
+                %d. %s
+                Мінімальна кількість: %d уп.
+                Бонус за мінімальну кількість: %d грн.
+                Бонус за кожну наступну упаковку: %d грн.
+                                            
+                """;
+        public static final String NO_PROMOTION_FOUND_2 = """
+                Ще немає жодної акції.
+                Спочатку додайте хоча б одну.
+                """;
+        public static final String ENTER_PROMOTION_DATA_REQUEST = """
+                ✍️ Введіть дані в такому порядку:
+                назва_акції
+                мінімальна_кількість_уп
+                бонус_за_мінімальну_кількість_уп
+                бонус_за_кожну_наступну_уп
+                """;
+        public static final String ENTER_PROMOTION_ID_REQUEST = "✍️ Введіть ID акції, яку хочете видалити.";
+        public static final String ENTER_PROMOTION_ID_AND_NEW_DATA_TO_UPDATE_REQUEST = """
+                ✍️ Введіть ID акції, яку хочете змінити, та нові дані в такому порядку:
+                ID акції
+                нова_назва_акції
+                нова_мінімальна_кількість_уп
+                новий_бонус_за_мінімальну_кількість_уп
+                новий_бонус_за_кожну_наступну_уп
+                """;
+        public static final String PROMOTION_INFO_2 = """
+                %s
+                Мінімальна кількість: %d уп.
+                Бонус за мінімальну кількість: %d грн.
+                Бонус за кожну наступну упаковку: %d грн.
+
+                """;
+        public static final String CHOOSE_PROMOTION = "Оберіть нижче, на яку акцію ви хочете підписатися/відписатися.\n\n";
+        public static final String LOSE_PROGRESS_WARNING_ON_UNSUBSCRIBE = "❗️❗️❗️ Зверніть увагу! Якщо ви відпишетеся від акції, то втратите увесь прогрес по ній.";
+        public static final String ENTER_USER_DATA_TO_CREATE = """
+                ✍️ Введіть дані користувача за наступним шаблоном:
+                ПІП
+                адреса_аптеки
+                назва_мережі_аптек
+                назва_міста_аптеки
+                номер_телефону
+                                
+                ❗️ Вводьте дані уважно!
+                Вони будуть відображатися у звітах у такому ж вигляді.
+                """;
+        public static final String ENTER_USER_DATA_TO_DELETE = "✍️ Введіть ID користувача, якого хочете видалити.";
+        public static final String ENTER_USER_DATA_TO_READ = "✍️ Введіть ID користувача, подробиці якого хочете відкрити.";
+        public static final String ENTER_USER_DATA_TO_UPDATE = """
+                ✍️ Введіть ID користувача, якого хочете змінити, та нові дані в такому порядку:
+                ID користувача
+                ПІП
+                адреса_аптеки
+                назва_мережі_аптек
+                назва_міста_аптеки
+                номер_телефону
+                                
+                ❗️ Вводьте дані уважно!
+                Вони будуть відображатися у звітах у такому ж вигляді.
+                """;
+        public static final String SUBSCRIPTIONS_RESULTS = "За вашими підписками у вас наступні результати:\n\n";
+        public static final String YOUR_BALANCE_INFO = """
+                %s
+                Теперішня кількість/Мінімальна кількість: %s/%s
+                Загальний бонус за підпискою: %s
+                                    
+                """;
+        public static final String TOTAL_BALANCE = "Усього бонусів: ";
+        public static final String RECEIPTS_CHECKING_MODE_IS_ENABLED = """
+                Ви у режимі перевірки чеків.
+                Зараз ви можете підтверджувати/відхиляти чеки.
+                Щоб вийти з цього режиму, натисніть "◀️ Назад".
+                """;
+        public static final String REPORT_DATE_INFO = "Звіт станом на\n\uD83D\uDDD3 %d.%d.%d\n\uD83D\uDD50 %d:%d";
+        public static final String CHOOSE_SUBSCRIPTION_TO_SEND_RECEIPT = "\uD83D\uDC47\uD83C\uDFFB Оберіть нижче, за якою підпискою ви хочете відправити чек.";
     }
 }
