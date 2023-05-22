@@ -1,6 +1,7 @@
 package ua.bizbiz.receiptscheckingbot.bot.handlers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -13,6 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
@@ -28,6 +30,7 @@ import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnsw
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class PhotoHandler {
 
     private final ChatRepository chatRepository;
@@ -39,9 +42,10 @@ public class PhotoHandler {
         final var chat = chatRepository.findByChatId(update.getMessage().getChatId());
         final List<Validable> responses = new ArrayList<>();
 
-        switch (chat.getStatus()) {
-            case SENDING_RECEIPT_PHOTO -> responses.addAll(processPhotoReceipt(update.getMessage(), chat));
-        }
+        log.info("Update handling with status: " + chat.getStatus());
+        if (chat.getStatus() == ChatStatus.SENDING_RECEIPT_PHOTO)
+            responses.addAll(processPhotoReceipt(update.getMessage(), chat));
+
         chatRepository.save(chat);
         return responses;
     }
@@ -54,6 +58,7 @@ public class PhotoHandler {
 
         if (drugsQuantity == null) {
             responses.add(new StartCommand(chat, FORGOT_ABOUT_DRUGS_QUANTITY).process(chat));
+            log.info("User didn't write quantity of drugs");
             return responses;
         }
         var senderPromotionName = "";
@@ -89,6 +94,7 @@ public class PhotoHandler {
                 .chatId(chat.getChatId())
                 .build());
         responses.add(new HomeCommand(chat).process(chat));
+        log.info("Photo sent in processing");
 
         dataHolder.setPhotoCreationTime(now);
         // clean DataHolder

@@ -34,7 +34,6 @@ public class Promotion {
     Integer resaleBonus;
 
     @OneToMany(cascade = CascadeType.ALL,
-            fetch = FetchType.EAGER,
             mappedBy = "promotion")
     List<Subscription> subscriptions = new ArrayList<>();
 }

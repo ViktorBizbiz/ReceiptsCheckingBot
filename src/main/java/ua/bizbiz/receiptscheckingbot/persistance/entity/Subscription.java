@@ -18,11 +18,11 @@ public class Subscription {
     @Column(name = "id")
     Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "promotion_id", referencedColumnName = "id")
     Promotion promotion;
 

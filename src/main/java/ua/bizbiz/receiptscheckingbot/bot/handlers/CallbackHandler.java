@@ -1,6 +1,7 @@
 package ua.bizbiz.receiptscheckingbot.bot.handlers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -18,7 +19,6 @@ import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.PromotionRepository;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.SubscriptionRepository;
-import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 import ua.bizbiz.receiptscheckingbot.util.DeleteUtils;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
@@ -34,10 +34,10 @@ import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.POIN
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class CallbackHandler {
 
     private final ChatRepository chatRepository;
-    private final UserRepository userRepository;
     private final PromotionRepository promotionRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final DataHolder dataHolder;
@@ -52,10 +52,11 @@ public class CallbackHandler {
         if (responses.size() != 0)
             return responses;
 
+        log.info("Update handling with status: " + chat.getStatus());
         switch (chat.getStatus()) {
             case USER_GETTING_PROMOTIONS -> responses.addAll(processUserSubscriptions(callbackData, message, chat));
             case SENDING_RECEIPT -> responses.addAll(processChosenSubscription(callbackData[0], chat, messageId));
-            case CHECKING_RECEIPTS -> responses.addAll(processCheckReceipt(callbackData));
+            case CHECKING_RECEIPTS -> responses.addAll(processCheckReceipt(callbackData, chat));
         }
 
         chatRepository.save(chat);
@@ -66,6 +67,7 @@ public class CallbackHandler {
         final List<Validable> responses = new ArrayList<>();
         final var text = callbackData[0];
         if (text.equalsIgnoreCase(HomeCommandType.HOME.getName())) {
+            log.info("HomeCommandType detected: " + HomeCommandType.HOME);
             responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
             responses.add(new HomeCommand(chat).process(chat));
             chatRepository.save(chat);
@@ -94,6 +96,7 @@ public class CallbackHandler {
                     .chatId(chat.getChatId())
                     .build());
             subscriptionRepository.deleteByPromotionIdAndUserId(promotionId, chat.getUser().getId());
+            log.info("User [" + chat.getUser().getFullName() + "] unsubscribed on promotion");
             return responses;
         }
         button.setText(CHECK_MARK_EMOJI + promotionName);
@@ -108,10 +111,11 @@ public class CallbackHandler {
                 .promotion(promotion.get())
                 .user(chat.getUser())
                 .build());
+        log.info("User [" + chat.getUser().getFullName() + "] subscribed on promotion");
         return responses;
     }
 
-    private List<Validable> processCheckReceipt(String[] callbackData) {
+    private List<Validable> processCheckReceipt(String[] callbackData, Chat chat) {
         final List<Validable> responses = new ArrayList<>();
 
         final var subscriptionId = Long.parseLong(callbackData[0]);
@@ -123,6 +127,7 @@ public class CallbackHandler {
             final var action = callbackData[1];
             final var subscription = optionalSubscription.get();
             final var drugQuantity = Integer.parseInt(callbackData[3]);
+            log.info("Admin [" + chat.getUser().getFullName() + "] did next action: " + action);
             switch (action) {
                 case ACCEPT -> {
                     final var newQuantity = subscription.getCurrentQuantity() + drugQuantity;
@@ -171,7 +176,7 @@ public class CallbackHandler {
         chat.setStatus(ChatStatus.SENDING_RECEIPT_PHOTO);
         final List<Validable> responses = new ArrayList<>();
         dataHolder.setSubscriptionId(subscriptionId);
-
+        log.info("User chose subscription with ID: " + subscriptionId);
         final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 

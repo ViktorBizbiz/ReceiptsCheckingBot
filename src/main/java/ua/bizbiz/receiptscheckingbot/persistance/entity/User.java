@@ -52,7 +52,6 @@ public class User {
     Long secretCode;
 
     @OneToMany(cascade = CascadeType.ALL,
-            fetch = FetchType.EAGER,
             mappedBy = "user")
     List<Subscription> subscriptions = new ArrayList<>();
 }

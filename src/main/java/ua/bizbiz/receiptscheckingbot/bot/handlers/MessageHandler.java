@@ -1,6 +1,5 @@
 package ua.bizbiz.receiptscheckingbot.bot.handlers;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -62,6 +61,7 @@ public class MessageHandler {
         if (responses.size() != 0)
             return responses;
 
+        log.info("Update handling with status: " + chat.getStatus());
         switch (chat.getStatus()) {
             case ADMIN_GETTING_USERS -> UserCrudCommandType.parse(text).ifPresent(command ->
                         responses.addAll(processCommand(command, chat)));
@@ -132,33 +132,6 @@ public class MessageHandler {
         return responses;
     }
 
-    private List<Validable> processCommand(UserCrudCommandType command, Chat chat) {
-        final List<ProcessableCommand> processableCommands = new ArrayList<>();
-        switch (command) {
-            case CREATE_USER -> processableCommands.add(new CreateUserCommand());
-            case READ_USER -> processableCommands.add(new ReadUserCommand());
-            case UPDATE_USER -> processableCommands.add(new UpdateUserCommand());
-            case DELETE_USER -> processableCommands.add(new DeleteUserCommand());
-        }
-        assert !processableCommands.isEmpty();
-        return processableCommands.stream()
-                .map(com -> com.process(chat))
-                .toList();
-    }
-
-    private List<Validable> processCommand(PromotionCrudCommandType command, Chat chat) {
-        final List<ProcessableCommand> processableCommands = new ArrayList<>();
-        switch (command) {
-            case CREATE_PROMOTION -> processableCommands.add(new CreatePromotionCommand());
-            case UPDATE_PROMOTION -> processableCommands.add(new UpdatePromotionCommand());
-            case DELETE_PROMOTION -> processableCommands.add(new DeletePromotionCommand());
-        }
-        assert !processableCommands.isEmpty();
-        return processableCommands.stream()
-                .map(com -> com.process(chat))
-                .toList();
-    }
-
     private List<Validable> processAnnouncement(String text, Chat chat) {
         final List<Validable> responses = new ArrayList<>();
         final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
@@ -187,40 +160,13 @@ public class MessageHandler {
         return responses;
     }
 
-    private SendMessage getSendMessageWithSender(String text, Chat sender, User recipient) {
-        return SendMessage.builder()
-                .chatId(recipient.getChat().getChatId())
-                .text("[Від: " + sender.getUser().getFullName() + "]\n" + text)
-                .build();
-    }
-
-    private List<Validable> processCommand(AnnouncementCommandType command, Chat chat) {
-        final List<ProcessableCommand> processableCommands = new ArrayList<>();
-        switch (command) {
-            case TO_PERSON -> {
-                final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
-                if (users.isPresent() && users.get().size() != 0) {
-                    processableCommands.add(new MakeAnnouncementToPersonCommand(users.get()));
-                } else {
-                    processableCommands.add(new StartCommand(chat, NO_AUTHORIZED_USER_FOUND));
-                }
-            }
-            case TO_ALL -> processableCommands.add(new MakeAnnouncementToAllCommand());
-        }
-        assert !processableCommands.isEmpty();
-        return processableCommands.stream()
-                .map(com -> com.process(chat))
-                .toList();
-    }
-
     private List<Validable> processSecretCode(String text, Chat chat, int messageId) {
         final List<Validable> responses = new ArrayList<>();
         final var secretCode = Long.parseLong(text);
         final var optionalUser = userRepository.findBySecretCode(secretCode);
         // if user not exists
         if (optionalUser.isEmpty()) {
-            responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
-            responses.add(new DefaultStartCommand(WRONG_AUTHORIZATION_CODE).process(chat));
+            provideAuthenticationFailedMessage(chat, messageId, responses);
             return responses;
         }
         final var user = optionalUser.get();
@@ -228,8 +174,7 @@ public class MessageHandler {
         // if user's chat exists, and it's not the same as current chat
         if (userChat != null &&
                 !userChat.getChatId().equals(chat.getChatId())) {
-            responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
-            responses.add(new DefaultStartCommand(WRONG_AUTHORIZATION_CODE).process(chat));
+            provideAuthenticationFailedMessage(chat, messageId, responses);
             return responses;
         }
         user.setChat(chat);
@@ -240,6 +185,7 @@ public class MessageHandler {
         responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
         responses.add(new StartCommand(chat, SUCCESSFUL_AUTHORIZATION).process(chat));
 
+        log.info("Authentication success");
         return responses;
     }
 
@@ -320,23 +266,6 @@ public class MessageHandler {
         return responses;
     }
 
-    private User getUserIfExists(long id, Chat chat, List<Validable> responses) {
-        final var optionalUser = userRepository.findById(id);
-        if (optionalUser.isEmpty()) {
-            responses.add(new StartCommand(chat, NO_USER_FOUND_BY_ID).process(chat));
-            return null;
-        }
-        return optionalUser.get();
-    }
-
-    private long generateSecretCode() {
-        Long secretCode = null;
-        final var min = 100_000;
-        while (userRepository.existsBySecretCode(secretCode) || secretCode == null || secretCode < min)
-            secretCode = (long) (Math.random() * 1_000_000);
-        return secretCode;
-    }
-
     private List<Validable> tryProcessHomeCommand(String text, Chat chat) {
         final List<Validable> responses = new ArrayList<>();
         if (isTelegramCommand(text))
@@ -347,7 +276,57 @@ public class MessageHandler {
         return responses;
     }
 
+    private List<Validable> processCommand(AnnouncementCommandType command, Chat chat) {
+        log.info("AnnouncementCommandType detected: " + command);
+        final List<ProcessableCommand> processableCommands = new ArrayList<>();
+        switch (command) {
+            case TO_PERSON -> {
+                final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+                if (users.isPresent() && users.get().size() != 0) {
+                    processableCommands.add(new MakeAnnouncementToPersonCommand(users.get()));
+                } else {
+                    processableCommands.add(new StartCommand(chat, NO_AUTHORIZED_USER_FOUND));
+                }
+            }
+            case TO_ALL -> processableCommands.add(new MakeAnnouncementToAllCommand());
+        }
+        assert !processableCommands.isEmpty();
+        return processableCommands.stream()
+                .map(com -> com.process(chat))
+                .toList();
+    }
+
+    private List<Validable> processCommand(PromotionCrudCommandType command, Chat chat) {
+        log.info("PromotionCrudCommandType detected: " + command);
+        final List<ProcessableCommand> processableCommands = new ArrayList<>();
+        switch (command) {
+            case CREATE_PROMOTION -> processableCommands.add(new CreatePromotionCommand());
+            case UPDATE_PROMOTION -> processableCommands.add(new UpdatePromotionCommand());
+            case DELETE_PROMOTION -> processableCommands.add(new DeletePromotionCommand());
+        }
+        assert !processableCommands.isEmpty();
+        return processableCommands.stream()
+                .map(com -> com.process(chat))
+                .toList();
+    }
+
+    private List<Validable> processCommand(UserCrudCommandType command, Chat chat) {
+        log.info("UserCrudCommandType detected: " + command);
+        final List<ProcessableCommand> processableCommands = new ArrayList<>();
+        switch (command) {
+            case CREATE_USER -> processableCommands.add(new CreateUserCommand());
+            case READ_USER -> processableCommands.add(new ReadUserCommand());
+            case UPDATE_USER -> processableCommands.add(new UpdateUserCommand());
+            case DELETE_USER -> processableCommands.add(new DeleteUserCommand());
+        }
+        assert !processableCommands.isEmpty();
+        return processableCommands.stream()
+                .map(com -> com.process(chat))
+                .toList();
+    }
+
     private List<Validable> processCommand(MainCommandType command, Chat chat) {
+        log.info("MainCommandType detected: " + command);
         final List<ProcessableCommand> processableCommands = new ArrayList<>();
         switch (command) {
             case ADMIN_SHOW_USERS -> {
@@ -380,8 +359,9 @@ public class MessageHandler {
             case CHECK_RECEIPTS -> processableCommands.add(new CheckReceiptsCommand());
             case USER_SHOW_PROMOTIONS -> {
                 final var promotions = promotionRepository.findAll();
+                final var userSubscriptions = subscriptionRepository.findAllByUserId(chat.getUser().getId());
                 if (promotions.size() != 0) {
-                    processableCommands.add(new UserShowPromotionsCommand(promotions, chat));
+                    processableCommands.add(new UserShowPromotionsCommand(promotions, userSubscriptions));
                 } else {
                     processableCommands.add(new StartCommand(chat, NO_PROMOTION_FOUND));
                 }
@@ -411,12 +391,43 @@ public class MessageHandler {
     }
 
     private List<Validable> processCommand(HomeCommandType command, Chat chat) {
+        log.info("HomeCommandType detected: " + command);
         final List<Validable> responses = new ArrayList<>();
         switch (command) {
             case START -> responses.add(new DefaultStartCommand().process(chat));
             case HOME -> responses.add(new HomeCommand(chat).process(chat));
         }
         return responses;
+    }
+
+    private void provideAuthenticationFailedMessage(Chat chat, int messageId, List<Validable> responses) {
+        responses.addAll(DeleteUtils.deleteMessages(messageId, 1, chat));
+        responses.add(new DefaultStartCommand(WRONG_AUTHORIZATION_CODE).process(chat));
+        log.info("Authentication not passed");
+    }
+
+    private SendMessage getSendMessageWithSender(String text, Chat sender, User recipient) {
+        return SendMessage.builder()
+                .chatId(recipient.getChat().getChatId())
+                .text("[Від: " + sender.getUser().getFullName() + "]\n" + text)
+                .build();
+    }
+
+    private User getUserIfExists(long id, Chat chat, List<Validable> responses) {
+        final var optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) {
+            responses.add(new StartCommand(chat, NO_USER_FOUND_BY_ID).process(chat));
+            return null;
+        }
+        return optionalUser.get();
+    }
+
+    private long generateSecretCode() {
+        Long secretCode = null;
+        final var min = 100_000;
+        while (userRepository.existsBySecretCode(secretCode) || secretCode == null || secretCode < min)
+            secretCode = (long) (Math.random() * 1_000_000);
+        return secretCode;
     }
 
     private boolean isTelegramCommand(String text) {

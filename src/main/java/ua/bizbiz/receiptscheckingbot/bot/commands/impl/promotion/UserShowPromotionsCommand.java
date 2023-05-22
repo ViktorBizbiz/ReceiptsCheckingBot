@@ -34,7 +34,7 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
                 .build();
     }
 
-    public UserShowPromotionsCommand(List<Promotion> promotions, Chat chat) {
+    public UserShowPromotionsCommand(List<Promotion> promotions, List<Subscription> userSubscriptions) {
         final var promotionsList = new StringBuilder();
         for (Promotion promotion : promotions) {
             promotionsList.append(String.format(PROMOTION_INFO_2, promotion.getName(), promotion.getMinQuantity(),
@@ -51,7 +51,7 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
         for (Promotion promotion : promotions) {
             var buttonName = POINT_RIGHT_EMOJI + promotion.getName();
 
-            if (chat.getUser().getSubscriptions().stream()
+            if (userSubscriptions.stream()
                     .anyMatch(sub -> Objects.equals(sub.getPromotion().getId(), promotion.getId())))
                 buttonName = CHECK_MARK_EMOJI + promotion.getName();
 
