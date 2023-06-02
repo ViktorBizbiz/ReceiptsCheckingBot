@@ -8,7 +8,8 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Builder
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
