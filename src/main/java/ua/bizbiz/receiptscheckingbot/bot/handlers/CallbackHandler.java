@@ -11,8 +11,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
-import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainmenu.HomeCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainmenu.StartCommand;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
@@ -49,7 +49,7 @@ public class CallbackHandler {
         final var chat = chatRepository.findByChatId(callbackQuery.getMessage().getChatId());
 
         final List<Validable> responses = tryProcessHomeCommand(callbackData, messageId, chat);
-        if (responses.size() != 0)
+        if (!responses.isEmpty())
             return responses;
 
         log.info("Update handling with status: " + chat.getStatus());

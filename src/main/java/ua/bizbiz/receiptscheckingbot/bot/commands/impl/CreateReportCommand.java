@@ -10,13 +10,10 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Promotion;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
-import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
-import ua.bizbiz.receiptscheckingbot.util.ApplicationConstants;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.REPORT_DATE_INFO;

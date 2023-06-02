@@ -19,9 +19,9 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.impl.SendReceiptCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement.MakeAnnouncementCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement.MakeAnnouncementToAllCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement.MakeAnnouncementToPersonCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.DefaultStartCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.HomeCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu.StartCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainmenu.DefaultStartCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainmenu.HomeCommand;
+import ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainmenu.StartCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion.*;
 import ua.bizbiz.receiptscheckingbot.bot.commands.impl.user.*;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
@@ -58,7 +58,7 @@ public class MessageHandler {
 
         List<Validable> responses = tryProcessHomeCommand(text, chat);
 
-        if (responses.size() != 0)
+        if (!responses.isEmpty())
             return responses;
 
         log.info("Update handling with status: " + chat.getStatus());
@@ -137,7 +137,7 @@ public class MessageHandler {
         final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
         switch (chat.getStatus()) {
             case SENDING_ANNOUNCEMENT_TO_ALL -> {
-                if (users.isPresent() && users.get().size() != 0) {
+                if (users.isPresent() && !users.get().isEmpty()) {
                     for (User user : users.get())
                         responses.add(getSendMessageWithSender(text, chat, user));
                     responses.add(new StartCommand(chat, MESSAGE_SENT_SUCCESSFULLY).process(chat));
@@ -282,7 +282,7 @@ public class MessageHandler {
         switch (command) {
             case TO_PERSON -> {
                 final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
-                if (users.isPresent() && users.get().size() != 0) {
+                if (users.isPresent() && !users.get().isEmpty()) {
                     processableCommands.add(new MakeAnnouncementToPersonCommand(users.get()));
                 } else {
                     processableCommands.add(new StartCommand(chat, NO_AUTHORIZED_USER_FOUND));
@@ -331,7 +331,7 @@ public class MessageHandler {
         switch (command) {
             case ADMIN_SHOW_USERS -> {
                 final var users = userRepository.findAll();
-                if (users.size() != 0) {
+                if (!users.isEmpty()) {
                     processableCommands.add(new AdminShowUsersCommand(users));
                 } else {
                     throw new RuntimeException("Something went wrong [users.size() == 0]");
@@ -340,7 +340,7 @@ public class MessageHandler {
             case CREATE_REPORT -> {
                 final var reportData = subscriptionRepository.findAll();
                 final var promotions = promotionRepository.findAll();
-                if (reportData.size() != 0 && promotions.size() != 0) {
+                if (!reportData.isEmpty() && !promotions.isEmpty()) {
                     processableCommands.add(new CreateReportCommand(reportData, promotions));
                     processableCommands.add(new HomeCommand(chat));
                 } else {
@@ -349,7 +349,7 @@ public class MessageHandler {
             }
             case ADMIN_SHOW_PROMOTIONS -> {
                 final var promotions = promotionRepository.findAll();
-                if (promotions.size() != 0) {
+                if (!promotions.isEmpty()) {
                     processableCommands.add(new AdminShowPromotionsCommand(promotions));
                 } else {
                     processableCommands.add(new AdminShowPromotionsCommand());
@@ -360,7 +360,7 @@ public class MessageHandler {
             case USER_SHOW_PROMOTIONS -> {
                 final var promotions = promotionRepository.findAll();
                 final var userSubscriptions = subscriptionRepository.findAllByUserId(chat.getUser().getId());
-                if (promotions.size() != 0) {
+                if (!promotions.isEmpty()) {
                     processableCommands.add(new UserShowPromotionsCommand(promotions, userSubscriptions));
                 } else {
                     processableCommands.add(new StartCommand(chat, NO_PROMOTION_FOUND));
@@ -368,7 +368,7 @@ public class MessageHandler {
             }
             case SEND_RECEIPT -> {
                 final var subscriptions = subscriptionRepository.findAllByUserId(chat.getUser().getId());
-                if (subscriptions.size() != 0) {
+                if (!subscriptions.isEmpty()) {
                     processableCommands.add(new SendReceiptCommand(subscriptions));
                 } else {
                     processableCommands.add(new StartCommand(chat, NO_SUBSCRIPTION_FOUND_1));
@@ -376,7 +376,7 @@ public class MessageHandler {
             }
             case BALANCE -> {
                 final var subscriptions = subscriptionRepository.findAllByUserId(chat.getUser().getId());
-                if (subscriptions.size() != 0) {
+                if (!subscriptions.isEmpty()) {
                     processableCommands.add(new BalanceCommand(subscriptions));
                     processableCommands.add(new HomeCommand(chat));
                 } else {
