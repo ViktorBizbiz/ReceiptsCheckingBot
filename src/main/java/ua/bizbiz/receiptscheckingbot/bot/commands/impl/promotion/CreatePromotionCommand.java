@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,12 +10,13 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class ShowPromotionsCommand implements ProcessableCommand {
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ENTER_PROMOTION_DATA_REQUEST;
+
+public class CreatePromotionCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
-
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
@@ -26,15 +27,13 @@ public class ShowPromotionsCommand implements ProcessableCommand {
                 .build();
     }
 
-    public ShowPromotionsCommand(ChatStatus chatStatus) {
-        this.chatStatus = chatStatus;
-        responseMessageText = """
-                ✍️ Введіть дані користувача за наступним шаблоном:
-                "ПІП: Іванов Іван Іванович"
-                "Адреса: адреса_аптеки"
-                "Мережа: назва_мережі_аптек\"""";
+    public CreatePromotionCommand() {
 
-        KeyboardRow row1 = new KeyboardRow();
+        responseMessageText = ENTER_PROMOTION_DATA_REQUEST;
+
+        chatStatus = ChatStatus.CREATING_PROMOTION;
+
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

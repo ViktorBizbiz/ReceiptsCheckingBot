@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.user;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -6,16 +6,18 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.AnnouncementCommandType;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class MakeAnnouncementCommand implements ProcessableCommand {
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ENTER_USER_DATA_TO_CREATE;
+
+public class CreateUserCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
+
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
@@ -26,24 +28,16 @@ public class MakeAnnouncementCommand implements ProcessableCommand {
                 .build();
     }
 
-    public MakeAnnouncementCommand() {
-        responseMessageText = "Кому треба відправити повідомлення?";
+    public CreateUserCommand() {
+        responseMessageText = ENTER_USER_DATA_TO_CREATE;
 
-        chatStatus = ChatStatus.SENDING_ANNOUNCEMENT;
+        chatStatus = ChatStatus.CREATING_USER;
 
-        KeyboardRow row1 = new KeyboardRow();
-        row1.add(AnnouncementCommandType.TO_ALL.getName());
-
-        KeyboardRow row2 = new KeyboardRow();
-        row2.add(AnnouncementCommandType.TO_PERSON.getName());
-
-        KeyboardRow row3 = new KeyboardRow();
-        row3.add(HomeCommandType.HOME.getName());
+        final var row1 = new KeyboardRow();
+        row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()
                 .keyboardRow(row1)
-                .keyboardRow(row2)
-                .keyboardRow(row3)
                 .resizeKeyboard(true)
                 .build();
     }

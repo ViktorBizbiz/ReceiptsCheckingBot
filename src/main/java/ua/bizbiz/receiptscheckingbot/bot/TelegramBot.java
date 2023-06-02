@@ -17,6 +17,7 @@ import ua.bizbiz.receiptscheckingbot.bot.handlers.CallbackHandler;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.MessageHandler;
 import ua.bizbiz.receiptscheckingbot.bot.handlers.PhotoHandler;
 import ua.bizbiz.receiptscheckingbot.config.BotConfig;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
@@ -63,16 +64,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
         }
         for (Validable response : responses) {
-            if (response instanceof SendMessage)
-                execute((SendMessage) response);
-            else if (response instanceof SendPhoto)
-                executeAndRememberMessageId((SendPhoto) response);
-            else if (response instanceof SendDocument)
-                execute((SendDocument) response);
-            else if (response instanceof EditMessageReplyMarkup)
-                execute((EditMessageReplyMarkup) response);
-            else if (response instanceof DeleteMessage)
-                execute((DeleteMessage) response);
+            if (response instanceof SendMessage sendMessage)
+                execute(sendMessage);
+            else if (response instanceof SendPhoto sendPhoto)
+                executeAndRememberMessageId(sendPhoto);
+            else if (response instanceof SendDocument sendDocument)
+                execute(sendDocument);
+            else if (response instanceof EditMessageReplyMarkup editMessageReplyMarkup)
+                execute(editMessageReplyMarkup);
+            else if (response instanceof DeleteMessage deleteMessage)
+                execute(deleteMessage);
         }
     }
 
@@ -92,16 +93,17 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     @SneakyThrows
-    @Scheduled(cron = "0 0 9 * * *")
-    @Scheduled(cron = "0 0 16 * * *")
+    @Scheduled(cron = "0 0 9,16 * * *")
     private void sendMotivationText() {
-        var users = userRepository.findAll();
-        for (User user : users) {
-            String motivation = "\uD83D\uDE00 Motivation \uD83D\uDE00";
-            execute(SendMessage.builder()
-                    .text(motivation)
-                    .chatId(user.getChat().getChatId())
-                    .build());
+        var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+        if (users.isPresent()) {
+            for (User user : users.get()) {
+                String motivation = "\uD83D\uDE00 Motivation \uD83D\uDE00";
+                execute(SendMessage.builder()
+                        .text(motivation)
+                        .chatId(user.getChat().getChatId())
+                        .build());
+            }
         }
     }
 }

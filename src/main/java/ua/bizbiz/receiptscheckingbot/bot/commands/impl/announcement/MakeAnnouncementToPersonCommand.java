@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -9,13 +9,16 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 
-public class CreateUserCommand implements ProcessableCommand {
+import java.util.List;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ID_AND_TEXT_MESSAGE_REQUEST;
+
+public class MakeAnnouncementToPersonCommand implements ProcessableCommand {
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
-
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
@@ -26,22 +29,20 @@ public class CreateUserCommand implements ProcessableCommand {
                 .build();
     }
 
-    public CreateUserCommand() {
-        responseMessageText = """
-                ✍️ Введіть дані користувача за наступним шаблоном:
-                ПІП
-                адреса_аптеки
-                назва_мережі_аптек
-                назва_міста_аптеки
-                номер_телефону
-                
-                ❗️ Вводьте дані уважно!
-                Вони будуть відображатися у звітах у такому ж вигляді.
-                """;
+    public MakeAnnouncementToPersonCommand(List<User> users) {
+        final var userList = new StringBuilder();
+        users.forEach(user ->
+                userList.append(user.getId())
+                        .append(". ")
+                        .append(user.getFullName())
+                        .append("\n"));
+        userList.append(ID_AND_TEXT_MESSAGE_REQUEST);
 
-        chatStatus = ChatStatus.CREATING_USER;
+        responseMessageText = userList.toString();
 
-        KeyboardRow row1 = new KeyboardRow();
+        chatStatus = ChatStatus.SENDING_ANNOUNCEMENT_TO_PERSON;
+
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

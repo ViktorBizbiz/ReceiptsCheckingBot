@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,10 +10,14 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Promotion;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.Emoji.*;
 
 public class UserShowPromotionsCommand implements ProcessableCommand {
 
@@ -30,43 +34,39 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
                 .build();
     }
 
-    public UserShowPromotionsCommand(List<Promotion> promotions, Chat chat) {
-        StringBuilder promotionsList = new StringBuilder();
+    public UserShowPromotionsCommand(List<Promotion> promotions, List<Subscription> userSubscriptions) {
+        final var promotionsList = new StringBuilder();
         for (Promotion promotion : promotions) {
-            promotionsList.append(String.format("""
-                            %s
-                            Мінімальна кількість: %d уп.
-                            Бонус за мінімальну кількість: %d грн.
-                            Бонус за кожну наступну упаковку: %d грн.
-
-                            """, promotion.getName(), promotion.getMinQuantity(),
+            promotionsList.append(String.format(PROMOTION_INFO_2, promotion.getName(), promotion.getMinQuantity(),
                     promotion.getCompletionBonus(), promotion.getResaleBonus()));
         }
-        promotionsList.append("\uD83D\uDC47\uD83C\uDFFB Оберіть нижче, на яку акцію ви хочете підписатися/відписатися.\n\n");
-        promotionsList.append("❗️❗️❗️ Зверніть увагу! Якщо ви відпишетеся від акції, то втратите увесь прогрес по ній.");
+        promotionsList.append(POINT_DOWN_EMOJI + CHOOSE_PROMOTION);
+        promotionsList.append(LOSE_PROGRESS_WARNING_ON_UNSUBSCRIBE);
         responseMessageText = promotionsList.toString();
 
         chatStatus = ChatStatus.USER_GETTING_PROMOTIONS;
 
-        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
-        int i = 0;
+        final List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        var buttonId = 0;
         for (Promotion promotion : promotions) {
-            String buttonName = "\uD83D\uDC49\uD83C\uDFFB " + promotion.getName();
+            var buttonName = POINT_RIGHT_EMOJI + promotion.getName();
 
-            if (chat.getUser().getSubscriptions().stream()
+            if (userSubscriptions.stream()
                     .anyMatch(sub -> Objects.equals(sub.getPromotion().getId(), promotion.getId())))
-                buttonName = "✅ " + promotion.getName();
+                buttonName = CHECK_MARK_EMOJI + promotion.getName();
 
             buttons.add(List.of(InlineKeyboardButton.builder()
                     .text(buttonName)
-                    .callbackData(i + "\n" + promotion.getId().toString() + "\n" + promotion.getName())
+                    .callbackData(buttonId + "\n" + promotion.getId().toString() + "\n" + promotion.getName())
                     .build()));
-            i++;
+            buttonId++;
         }
         buttons.add(List.of(InlineKeyboardButton.builder()
                 .text(HomeCommandType.HOME.getName())
                 .callbackData(HomeCommandType.HOME.getName())
                 .build()));
-        keyboard = InlineKeyboardMarkup.builder().keyboard(buttons).build();
+        keyboard = InlineKeyboardMarkup.builder()
+                .keyboard(buttons)
+                .build();
     }
 }

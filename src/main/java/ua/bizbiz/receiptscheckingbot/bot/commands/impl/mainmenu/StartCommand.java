@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainmenu;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -19,7 +19,6 @@ public class StartCommand implements ProcessableCommand {
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
-
         return SendMessage.builder()
                 .text(responseMessageText)
                 .replyMarkup(keyboard)
@@ -27,20 +26,21 @@ public class StartCommand implements ProcessableCommand {
                 .build();
     }
 
-    public StartCommand(Role role, String responseMessageText) {
+    public StartCommand(Chat chat, String responseMessageText) {
         this.responseMessageText = responseMessageText;
-        if (role == Role.ADMIN) {
+        final var role = chat.getUser().getRole();
+        if (isAdmin(role)) {
             chatStatus = ChatStatus.AUTHORIZED_AS_ADMIN;
 
-            KeyboardRow row1 = new KeyboardRow();
+            final var row1 = new KeyboardRow();
             row1.add(MainCommandType.ADMIN_SHOW_PROMOTIONS.getName());
             row1.add(MainCommandType.CREATE_REPORT.getName());
 
-            KeyboardRow row2 = new KeyboardRow();
+            final var row2 = new KeyboardRow();
             row2.add(MainCommandType.ADMIN_SHOW_USERS.getName());
             row2.add(MainCommandType.MAKE_AN_ANNOUNCEMENT.getName());
 
-            KeyboardRow row3 = new KeyboardRow();
+            final var row3 = new KeyboardRow();
             row3.add(MainCommandType.CHECK_RECEIPTS.getName());
 
             keyboard = ReplyKeyboardMarkup.builder()
@@ -53,11 +53,11 @@ public class StartCommand implements ProcessableCommand {
         } else {
             chatStatus = ChatStatus.AUTHORIZED_AS_USER;
 
-            KeyboardRow row1 = new KeyboardRow();
+            final var row1 = new KeyboardRow();
             row1.add(MainCommandType.USER_SHOW_PROMOTIONS.getName());
             row1.add(MainCommandType.SEND_RECEIPT.getName());
 
-            KeyboardRow row2 = new KeyboardRow();
+            final var row2 = new KeyboardRow();
             row2.add(MainCommandType.BALANCE.getName());
 
             keyboard = ReplyKeyboardMarkup.builder()
@@ -67,5 +67,9 @@ public class StartCommand implements ProcessableCommand {
                     .oneTimeKeyboard(true)
                     .build();
         }
+    }
+
+    private boolean isAdmin(Role role) {
+        return role == Role.ADMIN;
     }
 }

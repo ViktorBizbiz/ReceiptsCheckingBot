@@ -4,8 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Builder
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -30,6 +34,7 @@ public class Promotion {
     @Column(name = "resale_bonus")
     Integer resaleBonus;
 
-    @OneToOne(mappedBy = "promotion")
-    Subscription subscription;
+    @OneToMany(cascade = CascadeType.ALL,
+            mappedBy = "promotion")
+    List<Subscription> subscriptions = new ArrayList<>();
 }

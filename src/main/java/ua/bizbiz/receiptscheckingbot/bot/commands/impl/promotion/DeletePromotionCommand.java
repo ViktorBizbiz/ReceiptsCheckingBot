@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.promotion;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,7 +10,9 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class UpdatePromotionCommand implements ProcessableCommand {
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.ENTER_PROMOTION_ID_REQUEST;
+
+public class DeletePromotionCommand implements ProcessableCommand {
 
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
@@ -25,20 +27,13 @@ public class UpdatePromotionCommand implements ProcessableCommand {
                 .build();
     }
 
-    public UpdatePromotionCommand() {
+    public DeletePromotionCommand() {
 
-        responseMessageText = """
-                ✍️ Введіть ID акції, яку хочете змінити, та нові дані в такому порядку:
-                ID акції
-                нова_назва_акції
-                нова_мінімальна_кількість_уп
-                новий_бонус_за_мінімальну_кількість_уп
-                новий_бонус_за_кожну_наступну_уп
-                """;
+        responseMessageText = ENTER_PROMOTION_ID_REQUEST;
 
-        chatStatus = ChatStatus.UPDATING_PROMOTION;
+        chatStatus = ChatStatus.DELETING_PROMOTION;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

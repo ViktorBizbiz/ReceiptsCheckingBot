@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.announcement;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,8 +10,9 @@ import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 
-public class CreatePromotionCommand implements ProcessableCommand {
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.TEXT_MESSAGE_REQUEST;
 
+public class MakeAnnouncementToAllCommand implements ProcessableCommand {
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
@@ -25,19 +26,12 @@ public class CreatePromotionCommand implements ProcessableCommand {
                 .build();
     }
 
-    public CreatePromotionCommand() {
+    public MakeAnnouncementToAllCommand() {
+        responseMessageText = TEXT_MESSAGE_REQUEST;
 
-        responseMessageText = """
-                ✍️ Введіть дані в такому порядку:
-                назва_акції
-                мінімальна_кількість_уп
-                бонус_за_мінімальну_кількість_уп
-                бонус_за_кожну_наступну_уп
-                """;
+        chatStatus = ChatStatus.SENDING_ANNOUNCEMENT_TO_ALL;
 
-        chatStatus = ChatStatus.CREATING_PROMOTION;
-
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()

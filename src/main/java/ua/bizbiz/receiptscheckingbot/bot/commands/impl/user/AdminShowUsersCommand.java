@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.user;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -7,7 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ua.bizbiz.receiptscheckingbot.bot.commands.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.HomeCommandType;
-import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.UserCrudCommandType;
+import ua.bizbiz.receiptscheckingbot.bot.commands.commandTypes.crud.UserCrudCommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
@@ -33,29 +33,23 @@ public class AdminShowUsersCommand implements ProcessableCommand {
     public AdminShowUsersCommand(List<User> users) {
         StringBuilder usersList = new StringBuilder();
         for (User user : users) {
-            usersList.append(String.format("%d. %s", user.getId(), user.getFullName()));
-            if (user.getChat() != null) {
-                if (user.getRole() == Role.ADMIN) {
-                    usersList.append(" (Адмін)");
-                }
-                usersList.append("\n");
-            } else {
-                usersList.append(" (Не активовано)\n");
-            }
+            usersList.append(String.format("%d. %s", user.getId(), user.getFullName()))
+                    .append(detectUserAdditionalInfo(user))
+                    .append("\n");
         }
         responseMessageText = usersList.toString();
 
         chatStatus = ChatStatus.ADMIN_GETTING_USERS;
 
-        KeyboardRow row1 = new KeyboardRow();
+        final var row1 = new KeyboardRow();
         row1.add(UserCrudCommandType.CREATE_USER.getName());
         row1.add(UserCrudCommandType.UPDATE_USER.getName());
 
-        KeyboardRow row2 = new KeyboardRow();
+        final var row2 = new KeyboardRow();
         row2.add(UserCrudCommandType.DELETE_USER.getName());
         row2.add(UserCrudCommandType.READ_USER.getName());
 
-        KeyboardRow row3 = new KeyboardRow();
+        final var row3 = new KeyboardRow();
         row3.add(HomeCommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()
@@ -64,5 +58,15 @@ public class AdminShowUsersCommand implements ProcessableCommand {
                 .keyboardRow(row3)
                 .resizeKeyboard(true)
                 .build();
+    }
+
+    private String detectUserAdditionalInfo(User user) {
+        if (user.getChat() == null) {
+            return " (Не активовано)";
+        }
+        if (user.getRole() == Role.ADMIN) {
+            return " (Адмін)";
+        }
+        return "";
     }
 }

@@ -8,6 +8,8 @@ import ua.bizbiz.receiptscheckingbot.persistance.entity.Subscription;
 
 import java.util.List;
 
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
+
 public class BalanceCommand implements ProcessableCommand {
 
     private final String responseMessageText;
@@ -20,25 +22,21 @@ public class BalanceCommand implements ProcessableCommand {
     }
 
     public BalanceCommand(List<Subscription> subscriptions) {
-        StringBuilder response = new StringBuilder();
-        int totalBonus = 0;
-        response.append("За вашими підписками у вас наступні результати:\n\n");
+        final var response = new StringBuilder();
+        var totalBonus = 0;
+        response.append(SUBSCRIPTIONS_RESULTS);
         for (Subscription sub : subscriptions) {
-            var promotionName = sub.getPromotion().getName();
-            var currentQuantity = sub.getCurrentQuantity();
-            var subscriptionBonus = sub.getCurrentBonus();
-            var minQuantity = sub.getPromotion().getMinQuantity();
+            final var promotionName = sub.getPromotion().getName();
+            final var currentQuantity = sub.getCurrentQuantity();
+            final var subscriptionBonus = sub.getCurrentBonus();
+            final var minQuantity = sub.getPromotion().getMinQuantity();
 
-            response.append(String.format("""
-                    %s
-                    Теперішня кількість/Мінімальна кількість: %s/%s
-                    Загальний бонус за підпискою: %s
-                    
-                    """, promotionName, currentQuantity, minQuantity, subscriptionBonus));
+            response.append(String.format(YOUR_BALANCE_INFO,
+                    promotionName, currentQuantity, minQuantity, subscriptionBonus));
 
             totalBonus += subscriptionBonus;
         }
-        response.append("Усього бонусів: ").append(totalBonus);
+        response.append(TOTAL_BALANCE).append(totalBonus);
 
         responseMessageText = response.toString();
     }

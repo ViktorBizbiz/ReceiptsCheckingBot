@@ -5,7 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Builder
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -18,11 +19,11 @@ public class Subscription {
     @Column(name = "id")
     Long id;
 
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne()
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     User user;
 
-    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne()
     @JoinColumn(name = "promotion_id", referencedColumnName = "id")
     Promotion promotion;
 
