@@ -64,16 +64,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
         }
         for (Validable response : responses) {
-            if (response instanceof SendMessage)
-                execute((SendMessage) response);
-            else if (response instanceof SendPhoto)
-                executeAndRememberMessageId((SendPhoto) response);
-            else if (response instanceof SendDocument)
-                execute((SendDocument) response);
-            else if (response instanceof EditMessageReplyMarkup)
-                execute((EditMessageReplyMarkup) response);
-            else if (response instanceof DeleteMessage)
-                execute((DeleteMessage) response);
+            if (response instanceof SendMessage sendMessage)
+                execute(sendMessage);
+            else if (response instanceof SendPhoto sendPhoto)
+                executeAndRememberMessageId(sendPhoto);
+            else if (response instanceof SendDocument sendDocument)
+                execute(sendDocument);
+            else if (response instanceof EditMessageReplyMarkup editMessageReplyMarkup)
+                execute(editMessageReplyMarkup);
+            else if (response instanceof DeleteMessage deleteMessage)
+                execute(deleteMessage);
         }
     }
 
