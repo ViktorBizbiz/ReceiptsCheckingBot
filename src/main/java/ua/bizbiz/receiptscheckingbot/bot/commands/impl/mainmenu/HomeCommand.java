@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainMenu;
+package ua.bizbiz.receiptscheckingbot.bot.commands.impl.mainmenu;
 
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
