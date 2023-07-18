@@ -162,6 +162,10 @@ public class MessageHandler {
 
     private List<Validable> processSecretCode(String text, Chat chat, int messageId) {
         final List<Validable> responses = new ArrayList<>();
+        if (!text.matches("\\d+")) { // only digits
+            provideAuthenticationFailedMessage(chat, messageId, responses);
+            return responses;
+        }
         final var secretCode = Long.parseLong(text);
         final var optionalUser = userRepository.findBySecretCode(secretCode);
         // if user not exists
