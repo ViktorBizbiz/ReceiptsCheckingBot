@@ -11,9 +11,10 @@ spring:
   #Jpa settings
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    generate-ddl: true
+    generate-ddl: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
+    show-sql: false
 
 #Telegram bot settings
 bot:
