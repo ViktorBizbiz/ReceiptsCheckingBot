@@ -15,7 +15,8 @@ import lombok.experimental.FieldDefaults;
 public class Chat {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "chats_seq")
+    @SequenceGenerator(name = "chats_seq", allocationSize = 1)
     Long id;
 
     Long chatId;

@@ -18,7 +18,8 @@ import java.util.List;
 public class Promotion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "promotions_seq")
+    @SequenceGenerator(name = "promotions_seq", allocationSize = 1)
     @Column(name = "id")
     Long id;
 

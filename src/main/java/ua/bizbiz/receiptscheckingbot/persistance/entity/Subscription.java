@@ -15,7 +15,8 @@ import lombok.experimental.FieldDefaults;
 public class Subscription {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "subscriptions_seq")
+    @SequenceGenerator(name = "subscriptions_seq", allocationSize = 1)
     @Column(name = "id")
     Long id;
 
