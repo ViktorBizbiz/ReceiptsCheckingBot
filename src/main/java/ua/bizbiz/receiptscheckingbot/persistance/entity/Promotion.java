@@ -18,7 +18,8 @@ import java.util.List;
 public class Promotion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "promotions_seq")
+    @SequenceGenerator(name = "promotions_seq", allocationSize = 1)
     @Column(name = "id")
     Long id;
 
@@ -37,4 +38,14 @@ public class Promotion {
     @OneToMany(cascade = CascadeType.ALL,
             mappedBy = "promotion")
     List<Subscription> subscriptions = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "Promotion{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", minQuantity=" + minQuantity +
+                ", completionBonus=" + completionBonus +
+                ", resaleBonus=" + resaleBonus;
+    }
 }
