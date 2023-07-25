@@ -1,4 +1,0 @@
-package ua.bizbiz.receiptscheckingbot.bot.command.commandtype;
-
-public interface AnnouncementCommandMark extends Markable {
-}

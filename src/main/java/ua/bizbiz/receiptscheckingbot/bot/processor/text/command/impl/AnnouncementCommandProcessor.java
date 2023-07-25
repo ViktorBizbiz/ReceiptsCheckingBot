@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import ua.bizbiz.receiptscheckingbot.bot.command.ProcessableCommand;
-import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.AnnouncementCommandMark;
+import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.AnnouncementCommandTypeMark;
 import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.CommandType;
 import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.Markable;
 import ua.bizbiz.receiptscheckingbot.bot.command.impl.announcement.MakeAnnouncementToAllCommand;
@@ -51,6 +51,6 @@ public class AnnouncementCommandProcessor implements CommandProcessor {
 
     @Override
     public Class<? extends Markable> getMarkClass() {
-        return AnnouncementCommandMark.class;
+        return AnnouncementCommandTypeMark.class;
     }
 }

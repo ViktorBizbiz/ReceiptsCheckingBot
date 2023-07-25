@@ -47,7 +47,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        List<Validable> responses = factory.createUpdateHandler(update).handle(update);
+        List<Validable> responses = factory.getUpdateHandler(update).handle(update);
 
         for (Validable response : responses) {
             if (response instanceof SendMessage sendMessage)
