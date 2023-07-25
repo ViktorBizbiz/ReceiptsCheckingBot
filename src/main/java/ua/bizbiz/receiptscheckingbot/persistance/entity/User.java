@@ -56,5 +56,22 @@ public class User {
     @OneToMany(cascade = CascadeType.ALL,
             mappedBy = "user")
     List<Subscription> subscriptions = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", chat=" + chat.getId() +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", registeredAt=" + registeredAt +
+                ", role=" + role +
+                ", fullName='" + fullName + '\'' +
+                ", address='" + address + '\'' +
+                ", pharmacyChain='" + pharmacyChain + '\'' +
+                ", cityOfPharmacy='" + cityOfPharmacy + '\'' +
+                ", secretCode=" + secretCode +
+                ", subscriptions=" + subscriptions +
+                '}';
+    }
 }
 

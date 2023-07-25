@@ -1,6 +1,8 @@
 package ua.bizbiz.receiptscheckingbot.persistance.entity;
 
 public enum ChatStatus {
+
+    DEFAULT,
     ENTERING_SECRET_CODE,
     AUTHORIZED_AS_USER,
     AUTHORIZED_AS_ADMIN,

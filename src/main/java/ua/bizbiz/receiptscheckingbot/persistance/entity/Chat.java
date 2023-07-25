@@ -26,4 +26,14 @@ public class Chat {
 
     @OneToOne(mappedBy = "chat")
     User user;
+
+    @Override
+    public String toString() {
+        return "Chat{" +
+                "id=" + id +
+                ", chatId=" + chatId +
+                ", status=" + status +
+                ", user=" + user.getId() +
+                '}';
+    }
 }

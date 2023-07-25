@@ -33,4 +33,15 @@ public class Subscription {
 
     @Column(name = "current_bonus")
     Integer currentBonus;
+
+    @Override
+    public String toString() {
+        return "Subscription{" +
+                "id=" + id +
+                ", user=" + user +
+                ", promotion=" + promotion +
+                ", currentQuantity=" + currentQuantity +
+                ", currentBonus=" + currentBonus +
+                '}';
+    }
 }

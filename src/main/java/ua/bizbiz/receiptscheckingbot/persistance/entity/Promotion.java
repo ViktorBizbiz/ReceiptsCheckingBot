@@ -38,4 +38,14 @@ public class Promotion {
     @OneToMany(cascade = CascadeType.ALL,
             mappedBy = "promotion")
     List<Subscription> subscriptions = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "Promotion{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", minQuantity=" + minQuantity +
+                ", completionBonus=" + completionBonus +
+                ", resaleBonus=" + resaleBonus;
+    }
 }

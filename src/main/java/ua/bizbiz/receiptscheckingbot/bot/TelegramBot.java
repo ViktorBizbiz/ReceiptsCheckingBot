@@ -13,9 +13,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ua.bizbiz.receiptscheckingbot.bot.handlers.CallbackHandler;
-import ua.bizbiz.receiptscheckingbot.bot.handlers.MessageHandler;
-import ua.bizbiz.receiptscheckingbot.bot.handlers.PhotoHandler;
+import ua.bizbiz.receiptscheckingbot.bot.handler.UpdateHandlerFactory;
 import ua.bizbiz.receiptscheckingbot.config.BotConfig;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
@@ -24,7 +22,6 @@ import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,9 +30,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
     private final UserRepository userRepository;
-    private final MessageHandler messageHandler;
-    private final CallbackHandler callbackHandler;
-    private final PhotoHandler photoHandler;
+    private final UpdateHandlerFactory factory;
     private final DataHolder dataHolder;
 
     @Override
@@ -52,17 +47,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        List<Validable> responses = new ArrayList<>();
+        List<Validable> responses = factory.createUpdateHandler(update).handle(update);
 
-        if (update.hasCallbackQuery()) {
-            responses = callbackHandler.handle(update);
-        } else if (update.hasMessage()) {
-            if (update.getMessage().hasText()) {
-                responses = messageHandler.handle(update);
-            } else if (update.getMessage().hasPhoto()) {
-                responses = photoHandler.handle(update);
-            }
-        }
         for (Validable response : responses) {
             if (response instanceof SendMessage sendMessage)
                 execute(sendMessage);
