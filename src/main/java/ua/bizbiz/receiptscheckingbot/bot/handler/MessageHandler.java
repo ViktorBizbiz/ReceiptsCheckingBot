@@ -33,7 +33,7 @@ public class MessageHandler implements UpdateHandler {
         if ((command = commandParser.parse(chat, text)) != null) {
             responses = commandProcessorFactory.getCommandProcessor(command).process(chat, command);
         } else {
-            responses = messageProcessorFactory.createMessageProcessor(chat).process(chat, text);
+            responses = messageProcessorFactory.getMessageProcessor(chat).process(chat, text);
         }
 
         log.info("Update handling with status: " + chat.getStatus());
