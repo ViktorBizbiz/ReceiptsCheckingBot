@@ -1,6 +1,7 @@
 package ua.bizbiz.receiptscheckingbot.bot.processor.text.message.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import ua.bizbiz.receiptscheckingbot.bot.command.impl.mainmenu.StartCommand;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
 
+@Component
 @RequiredArgsConstructor
 public class AnnouncementProcessor implements MessageProcessor {
 

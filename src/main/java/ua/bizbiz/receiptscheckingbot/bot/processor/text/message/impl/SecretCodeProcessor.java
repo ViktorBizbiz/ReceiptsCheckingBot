@@ -2,6 +2,7 @@ package ua.bizbiz.receiptscheckingbot.bot.processor.text.message.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.interfaces.Validable;
 import ua.bizbiz.receiptscheckingbot.bot.command.impl.mainmenu.DefaultStartCommand;
 import ua.bizbiz.receiptscheckingbot.bot.command.impl.mainmenu.StartCommand;
@@ -17,6 +18,7 @@ import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnsw
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.WRONG_AUTHORIZATION_CODE;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class SecretCodeProcessor implements MessageProcessor {
 
