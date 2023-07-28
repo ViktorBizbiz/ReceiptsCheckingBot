@@ -9,7 +9,6 @@ spring:
 
   #Jpa settings
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: true
     hibernate:
       ddl-auto: create-drop
