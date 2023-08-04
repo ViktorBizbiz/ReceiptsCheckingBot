@@ -11,7 +11,7 @@ public class SubscriptionsCleaner {
 
     private final SubscriptionRepository subscriptionRepository;
 
-    @Scheduled(cron = "@monthly") //"0 0 0 1 * *"
+    @Scheduled(cron = "0 0 0 1 * *") // every month
     public void clear() {
         subscriptionRepository.deleteAll();
     }

@@ -10,6 +10,7 @@ import ua.bizbiz.receiptscheckingbot.bot.processor.text.command.CommandParser;
 import ua.bizbiz.receiptscheckingbot.bot.processor.text.command.CommandProcessorFactory;
 import ua.bizbiz.receiptscheckingbot.bot.processor.text.message.MessageProcessorFactory;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.ChatRepository;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class MessageHandler implements UpdateHandler {
         if (chat == null) {
             chat = Chat.builder()
                     .chatId(chatId)
+                    .status(ChatStatus.DEFAULT)
                     .build();
             chatRepository.save(chat);
         }
