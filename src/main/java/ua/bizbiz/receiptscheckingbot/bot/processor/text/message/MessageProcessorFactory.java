@@ -31,7 +31,7 @@ public class MessageProcessorFactory {
             case ENTERING_SECRET_CODE -> {
                 return messageProcessorMap.get(SecretCodeProcessor.class);
             }
-            case SENDING_ANNOUNCEMENT_TO_ALL, SENDING_ANNOUNCEMENT_TO_PERSON -> {
+            case SENDING_ANNOUNCEMENT_TO_ALL, SENDING_ANNOUNCEMENT_TO_PERSON, SENDING_ANNOUNCEMENT_TO_CHAIN -> {
                 return messageProcessorMap.get(AnnouncementProcessor.class);
             }
             case CREATING_PROMOTION, UPDATING_PROMOTION, DELETING_PROMOTION -> {

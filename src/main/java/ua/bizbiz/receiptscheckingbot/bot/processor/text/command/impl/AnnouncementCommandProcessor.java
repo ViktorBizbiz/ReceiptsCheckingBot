@@ -9,6 +9,7 @@ import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.AnnouncementCommand
 import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.CommandType;
 import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.Markable;
 import ua.bizbiz.receiptscheckingbot.bot.command.impl.announcement.MakeAnnouncementToAllCommand;
+import ua.bizbiz.receiptscheckingbot.bot.command.impl.announcement.MakeAnnouncementToChainCommand;
 import ua.bizbiz.receiptscheckingbot.bot.command.impl.announcement.MakeAnnouncementToPersonCommand;
 import ua.bizbiz.receiptscheckingbot.bot.command.impl.mainmenu.StartCommand;
 import ua.bizbiz.receiptscheckingbot.bot.processor.text.command.CommandProcessor;
@@ -32,15 +33,16 @@ public class AnnouncementCommandProcessor implements CommandProcessor {
     public List<Validable> process(Chat chat, CommandType command) {
         log.info("AnnouncementCommandType detected: " + command);
         final List<ProcessableCommand> processableCommands = new ArrayList<>();
+        final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+        if (users.isEmpty() || users.get().isEmpty()) {
+            processableCommands.add(new StartCommand(chat, NO_AUTHORIZED_USER_FOUND));
+            return processableCommands.stream()
+                    .map(com -> com.process(chat))
+                    .toList();
+        }
         switch (command) {
-            case TO_PERSON -> {
-                final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
-                if (users.isPresent() && !users.get().isEmpty()) {
-                    processableCommands.add(new MakeAnnouncementToPersonCommand(users.get()));
-                } else {
-                    processableCommands.add(new StartCommand(chat, NO_AUTHORIZED_USER_FOUND));
-                }
-            }
+            case TO_PERSON -> processableCommands.add(new MakeAnnouncementToPersonCommand(users.get()));
+            case TO_CHAIN -> processableCommands.add(new MakeAnnouncementToChainCommand(users.get()));
             case TO_ALL -> processableCommands.add(new MakeAnnouncementToAllCommand());
         }
         assert !processableCommands.isEmpty();

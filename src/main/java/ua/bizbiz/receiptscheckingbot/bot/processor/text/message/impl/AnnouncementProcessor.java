@@ -25,11 +25,11 @@ public class AnnouncementProcessor implements MessageProcessor {
     @Override
     public List<Validable> process(Chat chat, String text) {
         final List<Validable> responses = new ArrayList<>();
-        final var users = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
+        final var optionalUsers = userRepository.findAllByRoleAndChatIsNotNull(Role.USER);
         switch (chat.getStatus()) {
             case SENDING_ANNOUNCEMENT_TO_ALL -> {
-                if (users.isPresent() && !users.get().isEmpty()) {
-                    for (User user : users.get())
+                if (optionalUsers.isPresent() && !optionalUsers.get().isEmpty()) {
+                    for (User user : optionalUsers.get())
                         responses.add(getSendMessageWithSender(text, chat, user));
                     responses.add(new StartCommand(chat, MESSAGE_SENT_SUCCESSFULLY).process(chat));
                 } else {
@@ -46,6 +46,19 @@ public class AnnouncementProcessor implements MessageProcessor {
                 } else {
                     responses.add(new StartCommand(chat, NO_USER_FOUND_BY_ID).process(chat));
                 }
+            }
+            case SENDING_ANNOUNCEMENT_TO_CHAIN -> {
+                if (optionalUsers.isEmpty()) {
+                    responses.add(new StartCommand(chat, NO_AUTHORIZED_USER_FOUND).process(chat));
+                    break;
+                }
+                final var pharmacyChain = text.substring(0, text.indexOf("\n"));
+                final var message = text.substring(text.indexOf("\n"));
+                
+                optionalUsers.get().stream()
+                        .filter(user -> user.getPharmacyChain().equals(pharmacyChain))
+                        .forEach(user -> responses.add(getSendMessageWithSender(message, chat, user)));
+                responses.add(new StartCommand(chat, MESSAGE_SENT_SUCCESSFULLY).process(chat));
             }
         }
         return responses;

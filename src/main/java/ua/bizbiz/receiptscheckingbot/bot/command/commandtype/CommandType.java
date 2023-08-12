@@ -27,6 +27,7 @@ public enum CommandType {
     BALANCE("Баланс \uD83D\uDCB0", MainCommandTypeMark.class, ChatStatus.AUTHORIZED_AS_USER),
 
     TO_PERSON("Конкретному користувачу \uD83D\uDC64", AnnouncementCommandTypeMark.class ,ChatStatus.SENDING_ANNOUNCEMENT),
+    TO_CHAIN("Мережі користувачів ⛓", AnnouncementCommandTypeMark.class ,ChatStatus.SENDING_ANNOUNCEMENT),
     TO_ALL("Усім \uD83D\uDC65", AnnouncementCommandTypeMark.class ,ChatStatus.SENDING_ANNOUNCEMENT),
 
     CREATE_USER("Створити користувача ➕", UserCrudCommandTypeMark.class, ChatStatus.ADMIN_GETTING_USERS),
