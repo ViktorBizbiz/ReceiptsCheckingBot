@@ -77,7 +77,11 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     @Override
-    public <T extends Serializable, Method extends BotApiMethod<T>> T execute(Method method) throws TelegramApiException {
-        return super.execute(method);
+    public <T extends Serializable, Method extends BotApiMethod<T>> T execute(Method method) {
+        try {
+            return super.execute(method);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

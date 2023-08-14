@@ -29,21 +29,16 @@ public class UserReminderScheduler {
         sendTextForAllUsers("""
                 Доброго вечора!👋🏻 Ось вже і кінець робочого дня. 🕕
                 Пропоную перевірити Ваш баланс, натиснувши "Баланс 💰".
+                А також, не забудьте внести усі фіскальні чеки за сьогодні на перевірку (кнопка "Відправити чек 🧾"), щоб не втратити прогрес. 📈
                 """);
     }
     
     private void sendTextForAllUsers(String text) {
         userRepository.findAllByRoleAndChatIsNotNull(Role.USER)
                 .ifPresent(users -> users
-                        .forEach(user -> {
-                            try {
-                                bot.execute(SendMessage.builder()
-                                        .text(text)
-                                        .chatId(user.getChat().getChatId())
-                                        .build());
-                            } catch (TelegramApiException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }));
+                        .forEach(user -> bot.execute(SendMessage.builder()
+                                .text(text)
+                                .chatId(user.getChat().getChatId())
+                                .build())));
     }
 }
