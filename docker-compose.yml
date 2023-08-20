@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  bot:
+    image: viktorbizbiz/receiptscheckingbot:v1
+    build: .
+    container_name: bot_container
+    ports:
+      - '6565:6565'
+    environment:
+      db-url: jdbc:postgresql://botpostgresdb:5432/botDB
+      db-username: postgres
+      db-password: postgres
+    depends_on:
+      - botpostgresdb
+    networks:
+      - appnet
+    restart: always
+
+  botpostgresdb:
+    ports:
+      - '5432:5432'
+    container_name: db_container
+    image: postgres
+    environment:
+      - POSTGRES_DB=botDB
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgresdb_volume:/var/lib/postgresql/data
+    networks:
+      - appnet
+    restart: always
+
+volumes:
+  postgresdb_volume:
+
+networks:
+  appnet:
+    driver: bridge
+    name: myNet

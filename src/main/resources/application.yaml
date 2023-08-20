@@ -4,10 +4,14 @@
 spring:
   #Database settings
   datasource:
+#    driver-class-name: org.postgresql.Driver
+#    url: jdbc:postgresql://localhost:5432/receipts_checking_bot_app_db
+#    username: postgres
+#    password: postgres
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/receipts_checking_bot_app_db
-    username: postgres
-    password: postgres
+    url: ${db-url}
+    username: ${db-username}
+    password: ${db-password}
   #Jpa settings
   jpa:
     generate-ddl: false
