@@ -9,11 +9,15 @@ import ua.bizbiz.receiptscheckingbot.bot.command.ProcessableCommand;
 import ua.bizbiz.receiptscheckingbot.bot.command.commandtype.CommandType;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Chat;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.ChatStatus;
+import ua.bizbiz.receiptscheckingbot.persistance.entity.User;
 
-import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.WHOM_SEND_MESSAGE;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
-public class MakeAnnouncementCommand implements ProcessableCommand {
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.CHAIN_NAME_AND_TEXT_MESSAGE_REQUEST;
 
+public class MakeAnnouncementToChainCommand implements ProcessableCommand {
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
@@ -27,26 +31,26 @@ public class MakeAnnouncementCommand implements ProcessableCommand {
                 .build();
     }
 
-    public MakeAnnouncementCommand() {
-        responseMessageText = WHOM_SEND_MESSAGE;
+    public MakeAnnouncementToChainCommand(List<User> users) {
+        final var chainList = new StringBuilder();
+        users.stream()
+                .map(User::getPharmacyChain)
+                .collect(Collectors.toCollection(TreeSet::new))
+                .forEach(chain ->
+                        chainList.append(chain)
+                                .append("\n"));
+        
+        chainList.append(CHAIN_NAME_AND_TEXT_MESSAGE_REQUEST);
 
-        chatStatus = ChatStatus.SENDING_ANNOUNCEMENT;
+        responseMessageText = chainList.toString();
+
+        chatStatus = ChatStatus.SENDING_ANNOUNCEMENT_TO_CHAIN;
 
         final var row1 = new KeyboardRow();
-        final var row2 = new KeyboardRow();
-        final var row3 = new KeyboardRow();
-        final var row4 = new KeyboardRow();
-
-        row1.add(CommandType.TO_ALL.getName());
-        row2.add(CommandType.TO_CHAIN.getName());
-        row3.add(CommandType.TO_PERSON.getName());
-        row4.add(CommandType.HOME.getName());
+        row1.add(CommandType.HOME.getName());
 
         keyboard = ReplyKeyboardMarkup.builder()
                 .keyboardRow(row1)
-                .keyboardRow(row2)
-                .keyboardRow(row3)
-                .keyboardRow(row4)
                 .resizeKeyboard(true)
                 .build();
     }

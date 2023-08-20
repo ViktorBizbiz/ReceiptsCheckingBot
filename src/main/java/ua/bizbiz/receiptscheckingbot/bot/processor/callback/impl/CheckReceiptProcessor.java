@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
-import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.RECEIPT_DECLINED;
 
 @Slf4j
 @Component

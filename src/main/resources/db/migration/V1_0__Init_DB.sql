@@ -6,26 +6,7 @@ create sequence users_seq start with 3 increment by 1;
 create table chats (
     id bigint not null,
     chat_id bigint,
-    status varchar(255) check (status in ('ENTERING_SECRET_CODE',
-                                          'AUTHORIZED_AS_USER',
-                                          'AUTHORIZED_AS_ADMIN',
-                                          'CREATING_USER',
-                                          'READING_USER',
-                                          'UPDATING_USER',
-                                          'DELETING_USER',
-                                          'GETTING_REPORT',
-                                          'ADMIN_GETTING_PROMOTIONS',
-                                          'ADMIN_GETTING_USERS',
-                                          'CREATING_PROMOTION',
-                                          'UPDATING_PROMOTION',
-                                          'DELETING_PROMOTION',
-                                          'SENDING_ANNOUNCEMENT',
-                                          'SENDING_ANNOUNCEMENT_TO_ALL',
-                                          'SENDING_ANNOUNCEMENT_TO_PERSON',
-                                          'USER_GETTING_PROMOTIONS',
-                                          'SENDING_RECEIPT',
-                                          'SENDING_RECEIPT_PHOTO',
-                                          'CHECKING_RECEIPTS')),
+    status varchar(255),
     primary key (id)
 );
 

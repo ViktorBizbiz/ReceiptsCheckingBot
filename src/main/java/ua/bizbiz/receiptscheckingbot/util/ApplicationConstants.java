@@ -70,6 +70,12 @@ public class ApplicationConstants {
                 ID
                 ваше_повідомлення
                 """;
+        public static final String CHAIN_NAME_AND_TEXT_MESSAGE_REQUEST = """
+                
+                Введіть назву мережі аптек, користувачам якої ви хочете відправити повідомлення та саме повідомлення за наступним шаблоном:
+                назва_мережі_аптек
+                ваше_повідомлення
+                """;
         public static final String MESSAGE_SENT_SUCCESSFULLY = "✅ Повідомлення було відправлено.";
         public static final String NO_PROMOTION_FOUND_BY_ID = """
                 ⚠️ За даним ID акцій не існує.
