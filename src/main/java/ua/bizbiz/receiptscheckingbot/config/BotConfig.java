@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.config.bot;
+package ua.bizbiz.receiptscheckingbot.config;
 
 import lombok.AccessLevel;
 import lombok.Data;

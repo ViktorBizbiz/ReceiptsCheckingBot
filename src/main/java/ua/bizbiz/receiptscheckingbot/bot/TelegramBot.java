@@ -15,7 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ua.bizbiz.receiptscheckingbot.bot.handler.UpdateHandlerFactory;
-import ua.bizbiz.receiptscheckingbot.config.bot.BotConfig;
+import ua.bizbiz.receiptscheckingbot.config.BotConfig;
 import ua.bizbiz.receiptscheckingbot.util.DataHolder;
 import ua.bizbiz.receiptscheckingbot.util.PhotoMessageData;
 

@@ -1,4 +1,4 @@
-package ua.bizbiz.receiptscheckingbot.config.bot;
+package ua.bizbiz.receiptscheckingbot.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.ContextRefreshedEvent;
