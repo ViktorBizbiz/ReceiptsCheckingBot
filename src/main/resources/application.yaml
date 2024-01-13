@@ -21,5 +21,5 @@ spring:
 
 #Telegram bot settings
 bot:
-  name: FiscalReceiptsCheckingBot
-  token: 6168758085:AAGCYSwaw2aRrfAO9CF904XK166sQNOL41c
+  username: ${telegram-bot-username}
+  token: ${telegram-bot-token}

@@ -10,6 +10,8 @@ services:
       db-url: jdbc:postgresql://botpostgresdb:5432/botDB
       db-username: postgres
       db-password: postgres
+      telegram-bot-username:
+      telegram-bot-token:
     depends_on:
       - botpostgresdb
     networks:

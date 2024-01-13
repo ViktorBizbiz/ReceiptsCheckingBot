@@ -13,9 +13,9 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(value = "application.yaml")
 public class BotConfig {
 
-    @Value("${bot.name}")
-    String botName;
+    @Value("${bot.username}")
+    private String botName;
 
     @Value("${bot.token}")
-    String token;
+    private String token;
 }
