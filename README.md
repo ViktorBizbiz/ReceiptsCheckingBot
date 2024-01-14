@@ -35,42 +35,18 @@ The application is based on communication with the Telegrambots API.
 
 To get started with the ReceiptsCheckingBot, follow these steps:
 
-1. Open a Terminal or Command Prompt:
-    - If you're on Windows, you can use Command Prompt or PowerShell.
-    - On Linux or macOS, use the Terminal.
-
-2. Pull the application from GitHub.
-
-3. Configure docker-compose.yml.
-
-4. Configure Flyway migrations.
-
-5. Navigate to the Directory:
-    - Use the cd command to navigate to the directory where you saved the application.
-```bash
-cd /path/to/your/application-directory
-```
-
-6. Run Docker Compose:
-    - Execute the following command to start the Docker Compose process. Replace docker-compose.yml with the actual filename if it's different.
-```bash
-docker-compose up
-```
-
-7. Wait for Completion:
-    - Docker will download the necessary images and start the containers. This might take some time depending on your internet connection.
-
-8. Access Your Application:
-    - Once the process completes, you should see output indicating that your application is running. Access it through your Telegram account.
-
-9. Stopping the Containers:
-    - To stop the running containers, open a new terminal window, navigate to the same directory, and run:
-```bash
-docker-compose down
-```
-
-10. This stops and removes the containers.
-
+1. Create your Telegram bot:
+   - Go to [BotFather](https://t.me/BotFather) and follow the steps to create bot.
+2. Configure docker-compose.yml:
+   - Set `telegram-bot-username` and `telegram-bot-token` variables with values that you receive in BotFather.
+3. Configure Flyway migrations:
+   - Open `V1_1__Add_admins.sql` file and edit it with following values:
+      - `chat_id` - you can find out your chat ID in special telegram bots(e.g. [Get My ID](https://t.me/getmyid_bot) or alternatives).
+      - `full_name` - your full name in bot environment.
+      - `secret_code` - 6-digits password, that bot will request to get access.
+4. Re-build project with `mvnw/mvnw.cmd clean install`.
+5. Run `docker-compose up -d`.
+6. Bot is working! Have a good user experience!😊
 # Technologies Used 💻
 
 - **Backend:** Spring (Boot, Data)
