@@ -21,6 +21,7 @@ public class MakeAnnouncementToChainCommand implements ProcessableCommand {
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
+
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);
@@ -39,7 +40,7 @@ public class MakeAnnouncementToChainCommand implements ProcessableCommand {
                 .forEach(chain ->
                         chainList.append(chain)
                                 .append("\n"));
-        
+
         chainList.append(CHAIN_NAME_AND_TEXT_MESSAGE_REQUEST);
 
         responseMessageText = chainList.toString();

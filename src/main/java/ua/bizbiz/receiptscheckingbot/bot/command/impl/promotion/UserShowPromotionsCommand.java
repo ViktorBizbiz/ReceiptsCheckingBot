@@ -24,6 +24,7 @@ public class UserShowPromotionsCommand implements ProcessableCommand {
     private final String responseMessageText;
     private final ReplyKeyboard keyboard;
     private final ChatStatus chatStatus;
+
     @Override
     public Validable process(Chat chat) {
         chat.setStatus(chatStatus);

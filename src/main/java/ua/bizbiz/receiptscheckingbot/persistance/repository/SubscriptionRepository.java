@@ -11,5 +11,6 @@ import java.util.List;
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
     @Transactional
     void deleteByPromotionIdAndUserId(Long promotionId, Long userId);
+
     List<Subscription> findAllByUserId(Long userId);
 }

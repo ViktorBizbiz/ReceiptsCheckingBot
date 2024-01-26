@@ -37,6 +37,7 @@ public class MainCommandProcessor implements CommandProcessor {
     private final UserRepository userRepository;
     private final PromotionRepository promotionRepository;
     private final SubscriptionRepository subscriptionRepository;
+
     @Override
     public List<Validable> process(Chat chat, CommandType command) {
         log.info("MainCommandType detected: " + command);

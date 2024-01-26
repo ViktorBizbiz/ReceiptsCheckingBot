@@ -26,9 +26,9 @@ public enum CommandType {
     SEND_RECEIPT("Відправити чек \uD83E\uDDFE", MainCommandTypeMark.class, ChatStatus.AUTHORIZED_AS_USER),
     BALANCE("Баланс \uD83D\uDCB0", MainCommandTypeMark.class, ChatStatus.AUTHORIZED_AS_USER),
 
-    TO_PERSON("Конкретному користувачу \uD83D\uDC64", AnnouncementCommandTypeMark.class ,ChatStatus.SENDING_ANNOUNCEMENT),
-    TO_CHAIN("Мережі користувачів ⛓", AnnouncementCommandTypeMark.class ,ChatStatus.SENDING_ANNOUNCEMENT),
-    TO_ALL("Усім \uD83D\uDC65", AnnouncementCommandTypeMark.class ,ChatStatus.SENDING_ANNOUNCEMENT),
+    TO_PERSON("Конкретному користувачу \uD83D\uDC64", AnnouncementCommandTypeMark.class, ChatStatus.SENDING_ANNOUNCEMENT),
+    TO_CHAIN("Мережі користувачів ⛓", AnnouncementCommandTypeMark.class, ChatStatus.SENDING_ANNOUNCEMENT),
+    TO_ALL("Усім \uD83D\uDC65", AnnouncementCommandTypeMark.class, ChatStatus.SENDING_ANNOUNCEMENT),
 
     CREATE_USER("Створити користувача ➕", UserCrudCommandTypeMark.class, ChatStatus.ADMIN_GETTING_USERS),
     READ_USER("Подробиці за користувачем \uD83E\uDEAA", UserCrudCommandTypeMark.class, ChatStatus.ADMIN_GETTING_USERS),

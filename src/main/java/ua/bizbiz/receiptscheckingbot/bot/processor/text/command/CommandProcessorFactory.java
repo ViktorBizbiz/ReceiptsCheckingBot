@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 public class CommandProcessorFactory {
 
     private final Map<Class<? extends Markable>, CommandProcessor> commandProcessorMap;
+
     public CommandProcessorFactory(List<CommandProcessor> commandProcessors) {
         this.commandProcessorMap = commandProcessors.stream()
                 .collect(Collectors.toMap(CommandProcessor::getMarkClass, Function.identity()));

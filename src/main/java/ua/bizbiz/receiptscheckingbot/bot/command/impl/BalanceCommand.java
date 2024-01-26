@@ -13,6 +13,7 @@ import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnsw
 public class BalanceCommand implements ProcessableCommand {
 
     private final String responseMessageText;
+
     @Override
     public Validable process(Chat chat) {
         return SendMessage.builder()

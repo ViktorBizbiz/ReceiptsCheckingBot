@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.DATE_TIME_FORMAT;
 
 @Slf4j
 @Component
@@ -36,7 +37,7 @@ public class PhotoReceiptProcessor implements PhotoProcessor {
     private final UserRepository userRepository;
 
     @Override
-    public List<Validable> process(Chat chat, Message msg) {
+    public List<Validable> process(Chat chat, Message msg, LocalDateTime dateTime) {
         final List<Validable> responses = new ArrayList<>();
         final var fileId = msg.getPhoto().get(0).getFileId();
         final var subscriptionId = dataHolder.getSubscriptionId();
@@ -57,13 +58,12 @@ public class PhotoReceiptProcessor implements PhotoProcessor {
 
         final var caption = String.format(RECEIPT_INFO, senderUserFullName, senderPromotionName, drugsQuantity);
 
-        final var dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-        final var now = LocalDateTime.now();
-        final var nowText = dtf.format(now);
+        final var dtf = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+        final var nowText = dtf.format(dateTime);
 
         final List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
-        final var callbackAccept = subscriptionId + "\n" + ACCEPT + "\n" + now + "\n" + drugsQuantity;
-        final var callbackCancel = subscriptionId + "\n" + CANCEL + "\n" + now + "\n" + drugsQuantity;
+        final var callbackAccept = subscriptionId + "\n" + ACCEPT + "\n" + dateTime + "\n" + drugsQuantity;
+        final var callbackCancel = subscriptionId + "\n" + CANCEL + "\n" + dateTime + "\n" + drugsQuantity;
         buttons.add(getInlineButton(ACCEPT, callbackAccept));
         buttons.add(getInlineButton(CANCEL, callbackCancel));
         final var keyboard = InlineKeyboardMarkup.builder().keyboard(buttons).build();
@@ -82,7 +82,7 @@ public class PhotoReceiptProcessor implements PhotoProcessor {
         responses.add(new HomeCommand(chat).process(chat));
         log.info("Photo sent in processing");
 
-        dataHolder.setPhotoCreationTime(now);
+        dataHolder.setPhotoCreationTime(dateTime);
         // clean DataHolder
         dataHolder.setSubscriptionId(null);
         return responses;

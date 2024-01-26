@@ -5,6 +5,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ApplicationConstants {
 
+    public static final String DATE_TIME_FORMAT = "dd-MM-yyyy HH:mm:ss";
+
     @UtilityClass
     public class Emoji {
 
@@ -17,6 +19,7 @@ public class ApplicationConstants {
     public class Command {
         public static final String TELEGRAM_COMMAND_PREFIX = "/";
     }
+
     @UtilityClass
     public class ClientAnswerMessage {
         public static final String NO_SUBSCRIPTION_FOUND_1 = "⚠️ У вас ще немає жодної підписки.\nСпочатку підпишіться хоча б на одну акцію.";
@@ -71,7 +74,7 @@ public class ApplicationConstants {
                 ваше_повідомлення
                 """;
         public static final String CHAIN_NAME_AND_TEXT_MESSAGE_REQUEST = """
-                
+                                
                 Введіть назву мережі аптек, користувачам якої ви хочете відправити повідомлення та саме повідомлення за наступним шаблоном:
                 назва_мережі_аптек
                 ваше_повідомлення
@@ -107,8 +110,8 @@ public class ApplicationConstants {
                 Фото не було відправлено.
                 Спробуйте ще раз.
                 """;
-        public static final String RECEIPT_DECLINED = "❌ Ваш чек [%s, %d шт., станом на %s] було відхилено.";
-        public static final String RECEIPT_ACCEPTED = "✅ Ваш чек [%s, %d шт., станом на %s] було підтверджено.";
+        public static final String RECEIPT_DECLINED = "❌ Ваш чек [%s, %s шт., станом на %s] було відхилено.";
+        public static final String RECEIPT_ACCEPTED = "✅ Ваш чек [%s, %s шт., станом на %s] було підтверджено.";
         public static final String WAITING_FOR_PHOTO = """
                 Чекаю на ваше фото.
                 ‼️ Також допишіть разом із фото кількість препаратів(в штуках), яку ви хочете підтвердити цим фото.
@@ -156,7 +159,7 @@ public class ApplicationConstants {
                 Мінімальна кількість: %d уп.
                 Бонус за мінімальну кількість: %d грн.
                 Бонус за кожну наступну упаковку: %d грн.
-
+                                
                 """;
         public static final String CHOOSE_PROMOTION = "Оберіть нижче, на яку акцію ви хочете підписатися/відписатися.\n\n";
         public static final String LOSE_PROGRESS_WARNING_ON_UNSUBSCRIBE = "❗️❗️❗️ Зверніть увагу! Якщо ви відпишетеся від акції, то втратите увесь прогрес по ній.";

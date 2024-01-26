@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ua.bizbiz.receiptscheckingbot.bot.TelegramBot;
 import ua.bizbiz.receiptscheckingbot.persistance.entity.Role;
 import ua.bizbiz.receiptscheckingbot.persistance.repository.UserRepository;
@@ -23,7 +22,7 @@ public class UserReminderScheduler {
                 Нагадую, що всі актуальні акції на сьогодні можна обрати натиснувши "Актуальні акції 💊".
                 """);
     }
-    
+
     @Scheduled(cron = "0 0 18 * * *")
     private void sendEveningReminder() {
         sendTextForAllUsers("""
@@ -32,7 +31,7 @@ public class UserReminderScheduler {
                 А також, не забудьте внести усі фіскальні чеки за сьогодні на перевірку (кнопка "Відправити чек 🧾"), щоб не втратити прогрес. 📈
                 """);
     }
-    
+
     private void sendTextForAllUsers(String text) {
         userRepository.findAllByRoleAndChatIsNotNull(Role.USER)
                 .ifPresent(users -> users

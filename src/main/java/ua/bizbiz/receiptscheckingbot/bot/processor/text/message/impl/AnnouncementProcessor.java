@@ -54,7 +54,7 @@ public class AnnouncementProcessor implements MessageProcessor {
                 }
                 final var pharmacyChain = text.substring(0, text.indexOf("\n"));
                 final var message = text.substring(text.indexOf("\n"));
-                
+
                 optionalUsers.get().stream()
                         .filter(user -> user.getPharmacyChain().equals(pharmacyChain))
                         .forEach(user -> responses.add(getSendMessageWithSender(message, chat, user)));

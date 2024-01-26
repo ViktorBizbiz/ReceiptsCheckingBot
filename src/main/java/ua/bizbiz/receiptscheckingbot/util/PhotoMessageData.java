@@ -1,14 +1,12 @@
 package ua.bizbiz.receiptscheckingbot.util;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @EqualsAndHashCode
 public class PhotoMessageData {

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.ClientAnswerMessage.*;
+import static ua.bizbiz.receiptscheckingbot.util.ApplicationConstants.DATE_TIME_FORMAT;
 
 @Slf4j
 @Component
@@ -33,7 +34,7 @@ public class CheckReceiptProcessor implements CallbackProcessor {
         final List<Validable> responses = new ArrayList<>();
 
         final var subscriptionId = Long.parseLong(callbackData[0]);
-        final var dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        final var dtf = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         final var photoCreationTime = LocalDateTime.parse(callbackData[2]);
         final var photoCreationTimeText = dtf.format(photoCreationTime);
         final var optionalSubscription = subscriptionRepository.findById(subscriptionId);
@@ -62,12 +63,11 @@ public class CheckReceiptProcessor implements CallbackProcessor {
                                     subscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
                             .build());
                 }
-                case CANCEL ->
-                        responses.add(SendMessage.builder()
-                                .chatId(subscription.getUser().getChat().getChatId())
-                                .text(String.format(RECEIPT_DECLINED,
-                                        subscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
-                                .build());
+                case CANCEL -> responses.add(SendMessage.builder()
+                        .chatId(subscription.getUser().getChat().getChatId())
+                        .text(String.format(RECEIPT_DECLINED,
+                                subscription.getPromotion().getName(), drugQuantity, photoCreationTimeText))
+                        .build());
             }
         }
         final var photos = dataHolder.getPhotoMessages();

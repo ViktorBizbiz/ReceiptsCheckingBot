@@ -26,6 +26,7 @@ public class DefaultStartCommand implements ProcessableCommand {
         chatStatus = ChatStatus.ENTERING_SECRET_CODE;
         responseMessageText = ENTER_AUTHORIZATION_CODE;
     }
+
     public DefaultStartCommand(String responseMessageText) {
         chatStatus = ChatStatus.ENTERING_SECRET_CODE;
         this.responseMessageText = responseMessageText;
